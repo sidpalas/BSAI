@@ -33,16 +33,15 @@ class Board:
     #     elif player == 2:
     #         self.board2.placeShip(position, length, heading, type)
 
-    # def checkGameEnd(self):
-    #     return self.currentBoard.checkGameEnd()
+    def checkGameEnd(self):
+        return self.currentBoard.checkGameEnd()
 
     def executeTurn(self):
         self.currentBoard.executeTurn()
-        gameEnd = self.currentBoard.checkGameEnd()
+        gameEnd = self.checkGameEnd()
         self.currentPlayer = self.player1 if self.currentPlayer.number == 2 else self.player2
         self.currentBoard = self.board1 if self.currentBoard.player.number == 2 else self.board2
         return gameEnd
-
 
 class PlayerBoard:
     ships = [2,3,3,4,5]
@@ -93,6 +92,8 @@ class PlayerBoard:
 
     #need to keep track of individual ships to be able to know when one is sunk...
     def isValidShot(self, position):
+        if position[0] not in range(self.rows) or position[1] not in range(self.columns):
+            return False
         if self.grid[position[0]][position[1]] >= 0:
             return True
         else:
@@ -101,7 +102,7 @@ class PlayerBoard:
 
     def checkGameEnd(self):
         if self.lifeCount == 0:
-            print('Player ' + str(self.player.number) + ' Wins! (which player num is shooting at which board?)')
+            print('Player ' + str(self.player.number % 2 + 1) + ' Wins! (which player num is shooting at which board?)')
             return True
         else:
             return False
@@ -133,6 +134,8 @@ class PlayerBoard:
                 if self.grid[position[0]][position[1] + j] != 0:
                     print('another boat is there')
                     return False
+        else:
+            raise ValueError
 
         return True
 
@@ -152,6 +155,7 @@ class PlayerBoard:
                 if self.ships[val-1] == 0:
                     self.shipsSunk[val-1]=True
                     print('Ship of length', val, 'sunk!')
+            # print(self.player.number, self.lifeCount)
             return True
         else:
             return False
@@ -187,13 +191,11 @@ class Player:
             raise ValueError
 
 
-
-testBoard = Board(8,8,'AI','AI')
-
-gameOver = False
-while not gameOver:
-    testBoard.printBoard()
-    testBoard.printView()
-    gameOver = testBoard.executeTurn()
-
-    sleep(0.01) # Time in seconds.
+if __name__ == "__main__":
+    testBoard = Board(8,8,'AI','AI')
+    gameEnd = False
+    while not gameEnd:
+        # testBoard.printBoard()
+        testBoard.printView()
+        gameEnd = testBoard.executeTurn()
+        # sleep(0.01) # Time in seconds.
