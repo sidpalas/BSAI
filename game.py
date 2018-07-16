@@ -18,6 +18,7 @@ class Board:
 
     def executeTurn(self):
         self.currentBoard.executeTurn()
+        print('Board1: %s, Board2: %s' % (self.board1.score, self.board2.score))
         gameEnd = self.checkGameEnd()
         self.currentPlayer = self.player1 if self.currentPlayer.number == 2 else self.player2
         self.currentBoard = self.board1 if self.currentBoard.player.number == 2 else self.board2
@@ -26,16 +27,21 @@ class Board:
     def printBoard(self):
         print('\n')
         self.board1.printBoard()
-        print('#'*40)
+        print('#'*32)
         self.board2.printBoard()
         print('\n')
 
     def printView(self):
         print('\n')
+        print("Ship State:", self.board1.shipsSunk)
+        print('\n')
         self.board1.printView()
-        print('#'*40)
+        print('#'*32)
         self.board2.printView()
         print('\n')
+        print("Ship State:", self.board2.shipsSunk)
+        print('\n')
+
 
     # def placeShip(self,player, position, length, heading, type):
     #     if player == 1:
@@ -44,6 +50,8 @@ class Board:
     #         self.board2.placeShip(position, length, heading, type)
 
 class PlayerBoard:
+    MISS_VALUE = -1
+    HIT_VALUE = 10
     ships = [2,3,3,4,5]
     lifeCount = sum(ships)
     numShips = len(ships)
@@ -53,14 +61,16 @@ class PlayerBoard:
         self.rows = rows
         self.columns = columns
         self.grid = [[0]*columns for i in range(rows)]
-        self.opponentView = [[' ']*columns for i in range(rows)]
+        self.opponentView = [[0]*columns for i in range(rows)]
         self.player = player
         self.ships = PlayerBoard.ships[:] #used to keep track of when a particular boat is sunk
-        self.shipsSunk = [False]*len(self.ships)
+        self.shipsSunk = [0]*len(self.ships)
+        self.gameState = [item for sublist in self.grid for item in sublist] + self.shipsSunk
+        self.score = 0
 
     def checkGameEnd(self):
         if self.lifeCount == 0:
-            print('Player ' + str(self.player.number % 2 + 1) + ' Wins! (which player num is shooting at which board?)')
+            print('Player %s Wins by clearing Board %d!' % ((self.player.number % 2 + 1), (self.player.number % 2))) #(which player num is shooting at which board?)
             return True
         else:
             return False
@@ -71,6 +81,16 @@ class PlayerBoard:
             shotPosition = self.player.getShot()
             validShot = self.isValidShot(shotPosition)
         self.shoot(shotPosition)
+        # print(self.getGameState())
+
+
+    def getGameState(self):
+        flatBoard = [item for sublist in self.opponentView for item in sublist]
+        return flatBoard + self.shipsSunk
+
+    def getScore(self):
+        return self.score
+
 
     def isValidPlacement(self, position, length, heading):
         #check edges
@@ -133,7 +153,9 @@ class PlayerBoard:
 
     def printView(self):
         for row in self.opponentView:
-            print(row)
+            for col in row:
+                print('%3d' % col, end=' ')
+            print('')
 
     def randomBoatPlacement(self):
         for i, ship in enumerate(PlayerBoard.ships):
@@ -152,17 +174,18 @@ class PlayerBoard:
             if val == 0:
                 print('Miss!')
                 self.grid[position[0]][position[1]] = -(PlayerBoard.numShips+1) #+1 to avoid conflict with boat indices
-                self.opponentView[position[0]][position[1]]='O'
+                self.opponentView[position[0]][position[1]]= PlayerBoard.MISS_VALUE
+                self.score += PlayerBoard.MISS_VALUE
             else:
                 print('Hit!')
                 self.grid[position[0]][position[1]] *= -1
-                self.opponentView[position[0]][position[1]] = 'X'
+                self.opponentView[position[0]][position[1]] = PlayerBoard.HIT_VALUE
+                self.score += PlayerBoard.HIT_VALUE
                 self.lifeCount -= 1
                 self.ships[val-1] -= 1
                 if self.ships[val-1] == 0:
-                    self.shipsSunk[val-1]=True
+                    self.shipsSunk[val-1]=1 #would use True, but using in the gameState variable with ints
                     print('Ship of length ' + str(val) + ' sunk!')
-            # print(self.player.number, self.lifeCount)
             return True
         else:
             return False
@@ -198,4 +221,4 @@ if __name__ == "__main__":
         # testBoard.printBoard()
         testBoard.printView()
         gameEnd = testBoard.executeTurn()
-        # sleep(0.01) # Time in seconds.
+        sleep(0.01) # Time in seconds.
