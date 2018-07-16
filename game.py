@@ -2,13 +2,16 @@ import copy
 import random
 from time import sleep
 
-
 class Board:
-    def __init__(self, rows, columns):
-        self.board1 = PlayerBoard(rows, columns)
-        self.board2 = PlayerBoard(rows, columns)
+    def __init__(self, rows, columns, player1Type = 'AI', player2Type = 'AI'):
+        self.player1 = Player(1, player1Type)
+        self.player2 = Player(2, player2Type)
+        self.board1 = PlayerBoard(rows, columns, self.player1)
+        self.board2 = PlayerBoard(rows, columns, self.player2)
         self.board1.randomBoatPlacement()
         self.board2.randomBoatPlacement()
+        self.currentPlayer = self.player1
+        self.currentBoard = self.board1
 
     def printBoard(self):
         print('\n')
@@ -24,65 +27,47 @@ class Board:
         self.board2.printView()
         print('\n')
 
-    #separate out getShot() from shoot()
-    def getShot(self):
-        return
+    # def placeShip(self,player, position, length, heading, type):
+    #     if player == 1:
+    #         self.board1.placeShip(position, length, heading, type)
+    #     elif player == 2:
+    #         self.board2.placeShip(position, length, heading, type)
 
-    def shoot(self, player, auto = True):
-        validShot = False
-        while not validShot:
-            if auto:
-                positionList = [random.randint(0,7), random.randint(0,7)]
-            else:
-                positionString = input('Player ' + str(player) + ' Fire at will (row <space> col, zero indexed) \n')
-                #error handling for inputs... add regex
-                positionList = list(map(int, positionString.split()))
-            if player == 1:
-                validShot = self.board1.isValidShot(positionList)
-            else:
-                validShot = self.board2.isValidShot(positionList)
-        if player == 1:
-            self.board1.shoot(positionList)
-        elif player == 2:
-            self.board2.shoot(positionList)
+    # def checkGameEnd(self):
+    #     return self.currentBoard.checkGameEnd()
 
-    def placeShip(self,player, position, length, heading, type):
-        if player == 1:
-            self.board1.placeShip(position, length, heading, type)
-        elif player == 2:
-            self.board2.placeShip(position, length, heading, type)
+    def executeTurn(self):
+        self.currentBoard.executeTurn()
+        gameEnd = self.currentBoard.checkGameEnd()
+        self.currentPlayer = self.player1 if self.currentPlayer.number == 2 else self.player2
+        self.currentBoard = self.board1 if self.currentBoard.player.number == 2 else self.board2
+        return gameEnd
 
-    def checkGameEnd(self):
-        if self.board1.lifeCount == 0:
-            print('Player 2 Wins!')
-            return True
-        elif self.board2.lifeCount == 0:
-            print('Player 1 Wins!')
-            return True
-        else:
-            return False
 
 class PlayerBoard:
-    boats = [2,3,3,4,5]
-    lifeCount = sum(boats)
-    numBoats = len(boats)
+    ships = [2,3,3,4,5]
+    lifeCount = sum(ships)
+    numShips = len(ships)
 
-    def __init__(self, rows, columns):
+    def __init__(self, rows, columns, player):
         self.lifeCount = PlayerBoard.lifeCount
         self.rows = rows
         self.columns = columns
         self.grid = [[0]*columns for i in range(rows)]
         self.opponentView = [[' ']*columns for i in range(rows)]
+        self.player = player
+        self.ships = PlayerBoard.ships[:] #used to keep track of when a particular boat is sunk
+        self.shipsSunk = [False]*len(self.ships)
 
     def randomBoatPlacement(self):
-        for i, boat in enumerate(PlayerBoard.boats):
-            length = boat
+        for i, ship in enumerate(PlayerBoard.ships):
+            length = ship
             type = i + 1
             heading = "vertical" if random.randint(0,1) == 0 else "horizontal"
             validPlacement = False
             while not validPlacement:
                 position = [random.randint(0,7),random.randint(0,7)]
-                validPlacement = self.isValidPlacement(position, boat, heading)
+                validPlacement = self.isValidPlacement(position, ship, heading)
             self.placeShip(position, length, heading, type)
 
     def printBoard(self):
@@ -106,16 +91,20 @@ class PlayerBoard:
         else:
             print('invalid placement, try again')
 
-
     #need to keep track of individual ships to be able to know when one is sunk...
-
     def isValidShot(self, position):
         if self.grid[position[0]][position[1]] >= 0:
             return True
         else:
-            print('invalid shot, try again')
+            # print('invalid shot, try again')
             return False
 
+    def checkGameEnd(self):
+        if self.lifeCount == 0:
+            print('Player ' + str(self.player.number) + ' Wins! (which player num is shooting at which board?)')
+            return True
+        else:
+            return False
 
     def isValidPlacement(self, position, length, heading):
         #check edges
@@ -152,30 +141,59 @@ class PlayerBoard:
             val = self.grid[position[0]][position[1]]
             if val == 0:
                 print('Miss!')
-                self.grid[position[0]][position[1]] = -(PlayerBoard.numBoats+1) #+1 to avoid conflict with boat indices
+                self.grid[position[0]][position[1]] = -(PlayerBoard.numShips+1) #+1 to avoid conflict with boat indices
                 self.opponentView[position[0]][position[1]]='O'
             else:
                 print('Hit!')
                 self.grid[position[0]][position[1]] *= -1
                 self.opponentView[position[0]][position[1]] = 'X'
                 self.lifeCount -= 1
+                self.ships[val-1] -= 1
+                if self.ships[val-1] == 0:
+                    self.shipsSunk[val-1]=True
+                    print('Ship of length', val, 'sunk!')
             return True
         else:
             return False
+
+    def executeTurn(self):
+        validShot = False
+        while not validShot:
+            shotPosition = self.player.getShot()
+            validShot = self.isValidShot(shotPosition)
+        self.shoot(shotPosition)
+
 
 class Ship:
     def __init__(self, length):
         self.length = length
 
+class Player:
+    def __init__(self, number, type = 'AI'):
+        self.type = type
+        self.number = number
+
+    def getShot(self):
+        if self.type == 'AI':
+            return [random.randint(0,7),random.randint(0,7)]
+        elif self.type == 'Human':
+            positionString = input('Player ' + str(self.number) + ' Fire at will (row <space> col, zero indexed) \n')
+
+            #TODO: Add error handling for inputs... add regex
+
+            positionList = list(map(int, positionString.split()))
+            return positionList
+        else:
+            raise ValueError
 
 
-testBoard = Board(8,8)
 
-i = 0
-while not testBoard.checkGameEnd():
-    playerNum = i % 2 + 1
-    testBoard.shoot(playerNum)
+testBoard = Board(8,8,'AI','AI')
+
+gameOver = False
+while not gameOver:
     testBoard.printBoard()
     testBoard.printView()
-    i += 1
-    sleep(0.1) # Time in seconds.
+    gameOver = testBoard.executeTurn()
+
+    sleep(0.01) # Time in seconds.
