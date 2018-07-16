@@ -57,7 +57,8 @@ class Board:
 
 class PlayerBoard:
     MISS_VALUE = -1
-    HIT_VALUE = 10
+    HIT_VALUE = 100
+    REPEAT_VALUE = -5
     #ships = [2,3,3,4,5]
     ships = [2,3]
     lifeCount = sum(ships)
@@ -98,10 +99,17 @@ class PlayerBoard:
         print('Board score: %s' % self.getScore())
         self.printView()
         print('\n')
-        validShot = False
-        while not validShot:
-            shotPosition = self.player.getShot()
-            validShot = self.isValidShot(shotPosition)
+
+
+        # # Initially I was preventing bad shots...
+        # validShot = False
+        # while not validShot:
+        #     validShot = self.isValidShot(shotPosition)
+
+        # # A bad shot will now just be a skipped turn
+        shotPosition = self.player.getShot()
+
+
         print('Firing at %s' % shotPosition)
         self.shoot(shotPosition)
         print('\nAfter:')
@@ -152,7 +160,6 @@ class PlayerBoard:
 
         return True
 
-    #need to keep track of individual ships to be able to know when one is sunk...
     def isValidShot(self, position):
         if position[0] not in range(self.rows) or position[1] not in range(self.columns):
             return False
@@ -217,6 +224,7 @@ class PlayerBoard:
                     print('Ship of length ' + str(val) + ' sunk!')
             return True
         else:
+            self.score += PlayerBoard.REPEAT_VALUE
             return False
 
 class Player:
