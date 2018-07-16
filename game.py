@@ -1,5 +1,7 @@
 import copy
 import random
+from time import sleep
+
 
 class Board:
     def __init__(self, rows, columns):
@@ -22,12 +24,15 @@ class Board:
         self.board2.printView()
         print('\n')
 
-    def shoot(self, player):
+    def shoot(self, player, auto = True):
         validShot = False
         while not validShot:
-            positionString = input('Player ' + str(player) + ' Fire at will (row <space> col, zero indexed) \n')
-            #error handling for inputs... add regex
-            positionList = list(map(int, positionString.split()))
+            if auto:
+                positionList = [random.randint(0,7), random.randint(0,7)]
+            else:
+                positionString = input('Player ' + str(player) + ' Fire at will (row <space> col, zero indexed) \n')
+                #error handling for inputs... add regex
+                positionList = list(map(int, positionString.split()))
             if player == 1:
                 validShot = self.board1.isValidShot(positionList)
             else:
@@ -160,13 +165,11 @@ class Ship:
 
 testBoard = Board(8,8)
 
-testBoard.printBoard()
-
-
-# i = 0
-# while not testBoard.checkGameEnd():
-#     player = i % 2 + 1
-#     testBoard.shoot(player)
-#     testBoard.printBoard()
-#     testBoard.printView()
-#     i += 1
+i = 0
+while not testBoard.checkGameEnd():
+    playerNum = i % 2 + 1
+    testBoard.shoot(playerNum)
+    testBoard.printBoard()
+    testBoard.printView()
+    i += 1
+    sleep(0.1) # Time in seconds.
