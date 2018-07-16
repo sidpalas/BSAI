@@ -14,10 +14,44 @@ def disablePrint():
 def enablePrint():
     sys.stdout = sys.__stdout__
 
+class Game:
+    def __init__(self, numPlayers, playerTypes, rows, columns, showDisplay = True):
+        if numPlayers == 1:
+            trainingPlayer = Player(1, playerTypes[0], rows, columns)
+            self.board = PlayerBoard(rows, columns, trainingPlayer, showDisplay)
+        elif numPlayers == 2:
+            # 2 players (head to head):
+            self.board = Board(rows, columns, playerTypes[0], playerTypes[1], showDisplay)
+        else:
+            raise ValueError
+
+    def playGame(self):
+        gameEnd = False
+        while not gameEnd:
+            gameEnd = self.board.executeTurn()
+            sleep(0.01)
+
+    def _update_state(self, action):
+        return
+
+    def act(self):
+        return
+
+    def _get_reward(self):
+        return
+
+    def _is_over(self):
+        return
+
+    def reset(self):
+        return
+
+
+
 class Board:
     def __init__(self, rows, columns, player1Type = 'AI', player2Type = 'AI', showDisplay = True):
-        self.player1 = Player(1, player1Type)
-        self.player2 = Player(2, player2Type)
+        self.player1 = Player(1, player1Type, rows, columns)
+        self.player2 = Player(2, player2Type, rows, columns)
         self.board1 = PlayerBoard(rows, columns, self.player1, showDisplay)
         self.board2 = PlayerBoard(rows, columns, self.player2, showDisplay)
         self.currentPlayer = self.player1
@@ -58,8 +92,9 @@ class PlayerBoard:
     MISS_VALUE = -1
     HIT_VALUE = 100
     REPEAT_VALUE = -5
-    #ships = [2,3,3,4,5]
-    ships = [2,3]
+    # ships = [2,3,3,4,5]
+    # ships = [2,3]
+    ships = [2]
     lifeCount = sum(ships)
     numShips = len(ships)
 
@@ -238,13 +273,15 @@ class PlayerBoard:
             return False
 
 class Player:
-    def __init__(self, number, type = 'AI'):
+    def __init__(self, number, type, rows, columns):
         self.type = type
         self.number = number
+        self.rows = rows
+        self.columns = columns
 
     def getShot(self):
         if self.type == 'AI':
-            return [random.randint(0,7),random.randint(0,7)]
+            return [random.randint(0,self.rows-1),random.randint(0,self.columns-1)]
         elif self.type == 'Human':
             positionString = input('Player ' + str(self.number) + ' Fire at will (row <space> col, zero indexed) \n')
 
@@ -257,21 +294,7 @@ class Player:
 
 
 if __name__ == "__main__":
-    # # 2 players (head to head):
-    # testBoard = Board(rows = 4, columns = 4, player1Type = 'AI', player2Type = 'AI', showDisplay = True)
-    # gameEnd = False
-    # i = 0
-    # while not gameEnd:
-    #     gameEnd = testBoard.executeTurn()
-    #     # sleep(0.01)
+    testGame = Game(numPlayers = 1, playerTypes = ['AI'], rows=2, columns=2, showDisplay=True)
+    # testGame = Game(numPlayers = 2, playerTypes = ['AI']*2, rows=4, columns=4, showDisplay=True)
 
-
-    ############'
-
-    # # 1 Player (training)
-    trainingPlayer = Player(1, 'AI')
-    trainingBoard = PlayerBoard(rows = 4, columns = 4, player = trainingPlayer, showDisplay = True)
-    gameEnd = False
-    while not gameEnd:
-        gameEnd = trainingBoard.executeTurn()
-        # sleep(0.01)
+    testGame.playGame()
