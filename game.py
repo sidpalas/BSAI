@@ -16,6 +16,11 @@ def enablePrint():
 
 class Game:
     def __init__(self, numPlayers, playerTypes, rows, columns, showDisplay = True):
+        self.numPlayers = numPlayers
+        self.playerTypes = playerTypes
+        self.rows = rows
+        self.columns = columns
+        self.showDisplay = showDisplay
         if numPlayers == 1:
             trainingPlayer = Player(1, playerTypes[0], rows, columns)
             self.board = PlayerBoard(rows, columns, trainingPlayer, showDisplay)
@@ -31,20 +36,24 @@ class Game:
             gameEnd = self.board.executeTurn()
             sleep(0.01)
 
-    def _update_state(self, action):
-        return
+    #these methods assume single player board
+    #modeled after https://gist.github.com/EderSantana/c7222daa328f0e885093
+    def updateState(self, action):
+        #action is an int in range(0,row*column)
+        position = [action // self.columns, action % self.columns]
+        self.board.shoot(position)
 
-    def act(self):
-        return
+    def observe(self):
+        return self.board.getGameState()
 
-    def _get_reward(self):
-        return
-
-    def _is_over(self):
-        return
+    def act(self, action):
+        self.updateState(action)
+        reward = self.board.reward
+        gameOver = self.board.isGameOver()
+        return self.observe(), reward, gameOver
 
     def reset(self):
-        return
+        self.__init__(self.numPlayers, self.playerTypes, self.rows, self.columns, self.showDisplay)
 
 
 
@@ -110,18 +119,11 @@ class PlayerBoard:
         self.player = player
         self.ships = PlayerBoard.ships[:] #used to keep track of when a particular boat is sunk
         self.shipsSunk = np.zeros([len(self.ships),], dtype=int)
-
-        # # does not include sunk ships in game state
-        self.gameState = self.grid.flatten()
-
-        # # include the sunk ships in the game state
-        # self.gameState = np.concatenate((self.grid.flatten(),self.shipsSunk.flatten()),axis = 0)
-
         self.reward = 0
         self.score = 0
         self.moves = 0
 
-    def checkGameEnd(self):
+    def isGameOver(self):
         if self.lifeCount == 0:
             enablePrint()
             currentPlayerNum = self.player.number
@@ -158,12 +160,13 @@ class PlayerBoard:
         print('Board score: %s' % self.getScore())
         self.printView()
         print('\n')
-        return self.checkGameEnd()
+        return self.isGameOver()
 
 
     def getGameState(self):
-        flatBoard = [item for sublist in self.opponentView for item in sublist]
-        return flatBoard + self.shipsSunk
+        # gameState = np.concatenate((self.grid.flatten(),self.shipsSunk.flatten()),axis = 0)
+        gameState = self.opponentView.flatten()
+        return gameState
 
     def getScore(self):
         return self.score
