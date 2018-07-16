@@ -24,6 +24,10 @@ class Board:
         self.board2.printView()
         print('\n')
 
+    #separate out getShot() from shoot()
+    def getShot(self):
+        return
+
     def shoot(self, player, auto = True):
         validShot = False
         while not validShot:
