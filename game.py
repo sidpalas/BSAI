@@ -60,9 +60,11 @@ class Board:
 
 class PlayerBoard:
     boats = [2,3,3,4,5]
+    lifeCount = sum(boats)
+    numBoats = len(boats)
 
     def __init__(self, rows, columns):
-        self.lifeCount = 17
+        self.lifeCount = PlayerBoard.lifeCount
         self.rows = rows
         self.columns = columns
         self.grid = [[0]*columns for i in range(rows)]
@@ -146,7 +148,7 @@ class PlayerBoard:
             val = self.grid[position[0]][position[1]]
             if val == 0:
                 print('Miss!')
-                self.grid[position[0]][position[1]] = -9
+                self.grid[position[0]][position[1]] = -(PlayerBoard.numBoats+1) #+1 to avoid conflict with boat indices
                 self.opponentView[position[0]][position[1]]='O'
             else:
                 print('Hit!')
