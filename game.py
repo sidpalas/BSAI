@@ -13,6 +13,16 @@ class Board:
         self.currentPlayer = self.player1
         self.currentBoard = self.board1
 
+    def checkGameEnd(self):
+        return self.currentBoard.checkGameEnd()
+
+    def executeTurn(self):
+        self.currentBoard.executeTurn()
+        gameEnd = self.checkGameEnd()
+        self.currentPlayer = self.player1 if self.currentPlayer.number == 2 else self.player2
+        self.currentBoard = self.board1 if self.currentBoard.player.number == 2 else self.board2
+        return gameEnd
+
     def printBoard(self):
         print('\n')
         self.board1.printBoard()
@@ -33,16 +43,6 @@ class Board:
     #     elif player == 2:
     #         self.board2.placeShip(position, length, heading, type)
 
-    def checkGameEnd(self):
-        return self.currentBoard.checkGameEnd()
-
-    def executeTurn(self):
-        self.currentBoard.executeTurn()
-        gameEnd = self.checkGameEnd()
-        self.currentPlayer = self.player1 if self.currentPlayer.number == 2 else self.player2
-        self.currentBoard = self.board1 if self.currentBoard.player.number == 2 else self.board2
-        return gameEnd
-
 class PlayerBoard:
     ships = [2,3,3,4,5]
     lifeCount = sum(ships)
@@ -58,54 +58,19 @@ class PlayerBoard:
         self.ships = PlayerBoard.ships[:] #used to keep track of when a particular boat is sunk
         self.shipsSunk = [False]*len(self.ships)
 
-    def randomBoatPlacement(self):
-        for i, ship in enumerate(PlayerBoard.ships):
-            length = ship
-            type = i + 1
-            heading = "vertical" if random.randint(0,1) == 0 else "horizontal"
-            validPlacement = False
-            while not validPlacement:
-                position = [random.randint(0,7),random.randint(0,7)]
-                validPlacement = self.isValidPlacement(position, ship, heading)
-            self.placeShip(position, length, heading, type)
-
-    def printBoard(self):
-        for row in self.grid:
-            print(row)
-
-    def printView(self):
-        for row in self.opponentView:
-            print(row)
-
-    def placeShip(self, position, length, heading, type):
-        if self.isValidPlacement(position, length, heading):
-            startRow = position[0]
-            startCol = position[1]
-            if heading == 'vertical':
-                for i in range(length):
-                    self.grid[startRow + i][startCol] = type
-            elif heading == 'horizontal':
-                for j in range(length):
-                    self.grid[startRow][startCol + j] = type
-        else:
-            print('invalid placement, try again')
-
-    #need to keep track of individual ships to be able to know when one is sunk...
-    def isValidShot(self, position):
-        if position[0] not in range(self.rows) or position[1] not in range(self.columns):
-            return False
-        if self.grid[position[0]][position[1]] >= 0:
-            return True
-        else:
-            # print('invalid shot, try again')
-            return False
-
     def checkGameEnd(self):
         if self.lifeCount == 0:
             print('Player ' + str(self.player.number % 2 + 1) + ' Wins! (which player num is shooting at which board?)')
             return True
         else:
             return False
+
+    def executeTurn(self):
+        validShot = False
+        while not validShot:
+            shotPosition = self.player.getShot()
+            validShot = self.isValidShot(shotPosition)
+        self.shoot(shotPosition)
 
     def isValidPlacement(self, position, length, heading):
         #check edges
@@ -139,6 +104,48 @@ class PlayerBoard:
 
         return True
 
+    #need to keep track of individual ships to be able to know when one is sunk...
+    def isValidShot(self, position):
+        if position[0] not in range(self.rows) or position[1] not in range(self.columns):
+            return False
+        if self.grid[position[0]][position[1]] >= 0:
+            return True
+        else:
+            # print('invalid shot, try again')
+            return False
+
+    def placeShip(self, position, length, heading, type):
+        if self.isValidPlacement(position, length, heading):
+            startRow = position[0]
+            startCol = position[1]
+            if heading == 'vertical':
+                for i in range(length):
+                    self.grid[startRow + i][startCol] = type
+            elif heading == 'horizontal':
+                for j in range(length):
+                    self.grid[startRow][startCol + j] = type
+        else:
+            print('invalid placement, try again')
+
+    def printBoard(self):
+        for row in self.grid:
+            print(row)
+
+    def printView(self):
+        for row in self.opponentView:
+            print(row)
+
+    def randomBoatPlacement(self):
+        for i, ship in enumerate(PlayerBoard.ships):
+            length = ship
+            type = i + 1
+            heading = "vertical" if random.randint(0,1) == 0 else "horizontal"
+            validPlacement = False
+            while not validPlacement:
+                position = [random.randint(0,7),random.randint(0,7)]
+                validPlacement = self.isValidPlacement(position, ship, heading)
+            self.placeShip(position, length, heading, type)
+
     def shoot(self, position):
         if self.isValidShot(position):
             val = self.grid[position[0]][position[1]]
@@ -154,23 +161,16 @@ class PlayerBoard:
                 self.ships[val-1] -= 1
                 if self.ships[val-1] == 0:
                     self.shipsSunk[val-1]=True
-                    print('Ship of length', val, 'sunk!')
+                    print('Ship of length ' + str(val) + ' sunk!')
             # print(self.player.number, self.lifeCount)
             return True
         else:
             return False
 
-    def executeTurn(self):
-        validShot = False
-        while not validShot:
-            shotPosition = self.player.getShot()
-            validShot = self.isValidShot(shotPosition)
-        self.shoot(shotPosition)
-
-
-class Ship:
-    def __init__(self, length):
-        self.length = length
+#
+# class Ship:
+#     def __init__(self, length):
+#         self.length = length
 
 class Player:
     def __init__(self, number, type = 'AI'):
