@@ -14,7 +14,6 @@ def disablePrint():
 def enablePrint():
     sys.stdout = sys.__stdout__
 
-
 class Board:
     def __init__(self, rows, columns, player1Type = 'AI', player2Type = 'AI', showDisplay = True):
         self.player1 = Player(1, player1Type)
@@ -76,7 +75,14 @@ class PlayerBoard:
         self.player = player
         self.ships = PlayerBoard.ships[:] #used to keep track of when a particular boat is sunk
         self.shipsSunk = np.zeros([len(self.ships),], dtype=int)
-        self.gameState = np.concatenate((self.grid.flatten(),self.shipsSunk.flatten()),axis = 0)
+
+        # # does not include sunk ships in game state
+        self.gameState = self.grid.flatten()
+
+        # # include the sunk ships in the game state
+        # self.gameState = np.concatenate((self.grid.flatten(),self.shipsSunk.flatten()),axis = 0)
+
+        self.reward = 0
         self.score = 0
         self.moves = 0
 
@@ -210,21 +216,25 @@ class PlayerBoard:
             if val == 0:
                 print('Miss!')
                 self.grid[position[0]][position[1]] = -(PlayerBoard.numShips+1) #+1 to avoid conflict with boat indices
-                self.opponentView[position[0]][position[1]]= PlayerBoard.MISS_VALUE
-                self.score += PlayerBoard.MISS_VALUE
+                self.opponentView[position[0]][position[1]]= -1
+                reward = PlayerBoard.MISS_VALUE
             else:
                 print('Hit!')
                 self.grid[position[0]][position[1]] *= -1
-                self.opponentView[position[0]][position[1]] = PlayerBoard.HIT_VALUE
-                self.score += PlayerBoard.HIT_VALUE
+                self.opponentView[position[0]][position[1]] = 1
+                reward = PlayerBoard.HIT_VALUE
                 self.lifeCount -= 1
                 self.ships[val-1] -= 1
                 if self.ships[val-1] == 0:
                     self.shipsSunk[val-1]=1 #would use True, but using in the gameState variable with ints
                     print('Ship of length ' + str(val) + ' sunk!')
+
+            self.score += reward
+            self.reward = reward
             return True
         else:
-            self.score += PlayerBoard.REPEAT_VALUE
+            reward = PlayerBoard.REPEAT_VALUE
+            self.score += reward
             return False
 
 class Player:
