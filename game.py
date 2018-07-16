@@ -44,6 +44,7 @@ class Game:
         self.board.shoot(position)
 
     def observe(self):
+        self.board.printView()
         return self.board.getGameState()
 
     def act(self, action):
@@ -102,8 +103,8 @@ class PlayerBoard:
     HIT_VALUE = 100
     REPEAT_VALUE = -5
     # ships = [2,3,3,4,5]
-    # ships = [2,3]
-    ships = [2]
+    ships = [2,3]
+    #ships = [2]
     lifeCount = sum(ships)
     numShips = len(ships)
 
@@ -191,12 +192,12 @@ class PlayerBoard:
         #check other ships
         if heading == "vertical":
             for i in range(length):
-                if self.grid[position[0] + i][position[1]] != 0:
+                if self.grid[position[0] + i, position[1]] != 0:
                     print('another boat is there')
                     return False
         elif heading == "horizontal":
             for j in range(length):
-                if self.grid[position[0]][position[1] + j] != 0:
+                if self.grid[position[0], position[1] + j] != 0:
                     print('another boat is there')
                     return False
         else:
@@ -207,7 +208,8 @@ class PlayerBoard:
     def isValidShot(self, position):
         if position[0] not in range(self.rows) or position[1] not in range(self.columns):
             return False
-        if self.grid[position[0]][position[1]] >= 0:
+        print(type(self.grid))
+        if self.grid[position[0],position[1]] >= 0:
             return True
         else:
             # print('invalid shot, try again')
@@ -219,10 +221,10 @@ class PlayerBoard:
             startCol = position[1]
             if heading == 'vertical':
                 for i in range(length):
-                    self.grid[startRow + i][startCol] = type
+                    self.grid[startRow + i,startCol] = type
             elif heading == 'horizontal':
                 for j in range(length):
-                    self.grid[startRow][startCol + j] = type
+                    self.grid[startRow, startCol + j] = type
         else:
             print('invalid placement, try again')
 
@@ -250,16 +252,16 @@ class PlayerBoard:
     def shoot(self, position):
         if self.isValidShot(position):
             self.moves += 1
-            val = self.grid[position[0]][position[1]]
+            val = self.grid[position[0],position[1]]
             if val == 0:
                 print('Miss!')
-                self.grid[position[0]][position[1]] = -(PlayerBoard.numShips+1) #+1 to avoid conflict with boat indices
-                self.opponentView[position[0]][position[1]]= -1
+                self.grid[position[0],position[1]] = -(PlayerBoard.numShips+1) #+1 to avoid conflict with boat indices
+                self.opponentView[position] = -1
                 reward = PlayerBoard.MISS_VALUE
             else:
                 print('Hit!')
-                self.grid[position[0]][position[1]] *= -1
-                self.opponentView[position[0]][position[1]] = 1
+                self.grid[position[0],position[1]] *= -1
+                self.opponentView[position[0],position[1]] = 1
                 reward = PlayerBoard.HIT_VALUE
                 self.lifeCount -= 1
                 self.ships[val-1] -= 1
@@ -297,7 +299,7 @@ class Player:
 
 
 if __name__ == "__main__":
-    testGame = Game(numPlayers = 1, playerTypes = ['AI'], rows=2, columns=2, showDisplay=True)
+    testGame = Game(numPlayers = 1, playerTypes = ['AI'], rows=4, columns=4, showDisplay=True)
     # testGame = Game(numPlayers = 2, playerTypes = ['AI']*2, rows=4, columns=4, showDisplay=True)
 
     testGame.playGame()
