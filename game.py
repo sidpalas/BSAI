@@ -1,13 +1,26 @@
 import copy
 import random
 from time import sleep
+import logging
+import sys
+import os
+
+# Disable
+def disablePrint():
+    sys.stdout = open(os.devnull, 'w')
+
+# Restore
+def enablePrint():
+    sys.stdout = sys.__stdout__
+
+
 
 class Board:
-    def __init__(self, rows, columns, player1Type = 'AI', player2Type = 'AI'):
+    def __init__(self, rows, columns, player1Type = 'AI', player2Type = 'AI', showDisplay = True):
         self.player1 = Player(1, player1Type)
         self.player2 = Player(2, player2Type)
-        self.board1 = PlayerBoard(rows, columns, self.player1)
-        self.board2 = PlayerBoard(rows, columns, self.player2)
+        self.board1 = PlayerBoard(rows, columns, self.player1, showDisplay)
+        self.board2 = PlayerBoard(rows, columns, self.player2, showDisplay)
         self.currentPlayer = self.player1
         self.currentBoard = self.board1
 
@@ -53,7 +66,9 @@ class PlayerBoard:
     lifeCount = sum(ships)
     numShips = len(ships)
 
-    def __init__(self, rows, columns, player):
+    def __init__(self, rows, columns, player, showDisplay):
+        if not showDisplay:
+            disablePrint()
         self.lifeCount = PlayerBoard.lifeCount
         self.rows = rows
         self.columns = columns
@@ -66,9 +81,12 @@ class PlayerBoard:
         self.gameState = [item for sublist in self.grid for item in sublist] + self.shipsSunk
         self.score = 0
 
+
     def checkGameEnd(self):
         if self.lifeCount == 0:
-            print('Player %s Wins by clearing Board %d!' % ((self.player.number % 2 + 1), (self.player.number % 2))) #(which player num is shooting at which board?)
+            enablePrint()
+            currentPlayerNum = self.player.number
+            print('Player %s Wins by clearing Board %d!' % (currentPlayerNum, 1 if currentPlayerNum == 2 else 2)) #(which player num is shooting at which board?)
             return True
         else:
             return False
@@ -78,7 +96,7 @@ class PlayerBoard:
         print("#"*20)
         print('\nBefore:')
         print("Ship State: %s" % self.shipsSunk)
-        print('Board score: %', self.getScore())
+        print('Board score: %s' % self.getScore())
         self.printView()
         print('\n')
         validShot = False
@@ -223,23 +241,21 @@ class Player:
 
 
 if __name__ == "__main__":
-    # 2 players:
-    testBoard = Board(8,8,'AI','AI')
+    # 2 players (head to head):
+    testBoard = Board(rows = 8, columns = 8, player1Type = 'AI', player2Type = 'AI', showDisplay = True)
     gameEnd = False
     i = 0
     while not gameEnd:
-        # testBoard.printBoard()
-        # testBoard.printFullView()
         gameEnd = testBoard.executeTurn()
-        sleep(0.01) # Time in seconds.
+        # sleep(0.01)
 
 
-    # print('###########')
+    ############'
 
     # # 1 Player (training)
-    # trainingPlayer = Player(1, 'AI')
-    # trainingBoard = PlayerBoard(8,8,trainingPlayer)
-    # gameEnd = False
-    # while not gameEnd:
-    #     gameEnd = trainingBoard.executeTurn()
-    #     sleep(0.1)
+    trainingPlayer = Player(1, 'AI')
+    trainingBoard = PlayerBoard(rows = 8, columns = 8, player = trainingPlayer, showDisplay = False)
+    gameEnd = False
+    while not gameEnd:
+        gameEnd = trainingBoard.executeTurn()
+        # sleep(0.01)
