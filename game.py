@@ -8,18 +8,15 @@ class Board:
         self.player2 = Player(2, player2Type)
         self.board1 = PlayerBoard(rows, columns, self.player1)
         self.board2 = PlayerBoard(rows, columns, self.player2)
-        self.board1.randomBoatPlacement()
-        self.board2.randomBoatPlacement()
         self.currentPlayer = self.player1
         self.currentBoard = self.board1
 
-    def checkGameEnd(self):
-        return self.currentBoard.checkGameEnd()
+    # def checkGameEnd(self):
+    #     return self.currentBoard.checkGameEnd()
 
     def executeTurn(self):
-        self.currentBoard.executeTurn()
-        print('Board1: %s, Board2: %s' % (self.board1.score, self.board2.score))
-        gameEnd = self.checkGameEnd()
+        gameEnd = self.currentBoard.executeTurn()
+        print('Board 1 Score: %s, Board 2 Score: %s' % (self.board1.getScore(), self.board2.getScore()))
         self.currentPlayer = self.player1 if self.currentPlayer.number == 2 else self.player2
         self.currentBoard = self.board1 if self.currentBoard.player.number == 2 else self.board2
         return gameEnd
@@ -31,7 +28,7 @@ class Board:
         self.board2.printBoard()
         print('\n')
 
-    def printView(self):
+    def printFullView(self):
         print('\n')
         print("Ship State:", self.board1.shipsSunk)
         print('\n')
@@ -61,6 +58,7 @@ class PlayerBoard:
         self.rows = rows
         self.columns = columns
         self.grid = [[0]*columns for i in range(rows)]
+        self.randomBoatPlacement()
         self.opponentView = [[0]*columns for i in range(rows)]
         self.player = player
         self.ships = PlayerBoard.ships[:] #used to keep track of when a particular boat is sunk
@@ -76,12 +74,27 @@ class PlayerBoard:
             return False
 
     def executeTurn(self):
+        print('\nPlayer %s Turn:' % self.player.number)
+        print("#"*20)
+        print('\nBefore:')
+        print("Ship State: %s" % self.shipsSunk)
+        print('Board score: %', self.getScore())
+        self.printView()
+        print('\n')
         validShot = False
         while not validShot:
             shotPosition = self.player.getShot()
             validShot = self.isValidShot(shotPosition)
+        print('Firing at %s' % shotPosition)
         self.shoot(shotPosition)
-        # print(self.getGameState())
+
+        print("Ship State: %s" % self.shipsSunk)
+        print('\nAfter:')
+        print(self.shipsSunk)
+        print('Board score: %s' % self.getScore())
+        self.printView()
+        print('\n')
+        return self.checkGameEnd()
 
 
     def getGameState(self):
@@ -190,11 +203,6 @@ class PlayerBoard:
         else:
             return False
 
-#
-# class Ship:
-#     def __init__(self, length):
-#         self.length = length
-
 class Player:
     def __init__(self, number, type = 'AI'):
         self.type = type
@@ -215,10 +223,23 @@ class Player:
 
 
 if __name__ == "__main__":
+    # 2 players:
     testBoard = Board(8,8,'AI','AI')
     gameEnd = False
+    i = 0
     while not gameEnd:
         # testBoard.printBoard()
-        testBoard.printView()
+        # testBoard.printFullView()
         gameEnd = testBoard.executeTurn()
         sleep(0.01) # Time in seconds.
+
+
+    # print('###########')
+
+    # # 1 Player (training)
+    # trainingPlayer = Player(1, 'AI')
+    # trainingBoard = PlayerBoard(8,8,trainingPlayer)
+    # gameEnd = False
+    # while not gameEnd:
+    #     gameEnd = trainingBoard.executeTurn()
+    #     sleep(0.1)
