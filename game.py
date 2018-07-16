@@ -13,14 +13,14 @@ class Board:
     def printBoard(self):
         print('\n')
         self.board1.printBoard()
-        print('#'*24)
+        print('#'*40)
         self.board2.printBoard()
         print('\n')
 
     def printView(self):
         print('\n')
         self.board1.printView()
-        print('#'*24)
+        print('#'*40)
         self.board2.printView()
         print('\n')
 
@@ -53,7 +53,7 @@ class Board:
             print('Player 2 Wins!')
             return True
         elif self.board2.lifeCount == 0:
-            print('Player 2 Wins!')
+            print('Player 1 Wins!')
             return True
         else:
             return False
