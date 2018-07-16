@@ -4,15 +4,15 @@ from time import sleep
 import logging
 import sys
 import os
+import numpy as np
 
 # Disable
 def disablePrint():
     sys.stdout = open(os.devnull, 'w')
 
-# Restore
+# Enable
 def enablePrint():
     sys.stdout = sys.__stdout__
-
 
 
 class Board:
@@ -58,7 +58,8 @@ class Board:
 class PlayerBoard:
     MISS_VALUE = -1
     HIT_VALUE = 10
-    ships = [2,3,3,4,5]
+    #ships = [2,3,3,4,5]
+    ships = [2,3]
     lifeCount = sum(ships)
     numShips = len(ships)
 
@@ -68,22 +69,22 @@ class PlayerBoard:
         self.lifeCount = PlayerBoard.lifeCount
         self.rows = rows
         self.columns = columns
-        self.grid = [[0]*columns for i in range(rows)]
+        self.grid = np.zeros([rows,columns], dtype=int)
         self.randomBoatPlacement()
-        self.opponentView = [[0]*columns for i in range(rows)]
+        self.opponentView = np.zeros([rows,columns],dtype=int)
         self.player = player
         self.ships = PlayerBoard.ships[:] #used to keep track of when a particular boat is sunk
-        self.shipsSunk = [0]*len(self.ships)
-        self.gameState = [item for sublist in self.grid for item in sublist] + self.shipsSunk
+        self.shipsSunk = np.zeros([len(self.ships),], dtype=int)
+        self.gameState = np.concatenate((self.grid.flatten(),self.shipsSunk.flatten()),axis = 0)
         self.score = 0
-
+        self.moves = 0
 
     def checkGameEnd(self):
         if self.lifeCount == 0:
             enablePrint()
             currentPlayerNum = self.player.number
             print('*'*50)
-            print('Player %s Wins by clearing Board %d!' % (currentPlayerNum, 1 if currentPlayerNum == 2 else 2)) #(which player num is shooting at which board?)
+            print('Player %s Wins by clearing Board %d in %s moves!' % (currentPlayerNum, 1 if currentPlayerNum == 2 else 2, self.moves)) #(which player num is shooting at which board?)
             print('*'*50)
             return True
         else:
@@ -197,6 +198,7 @@ class PlayerBoard:
 
     def shoot(self, position):
         if self.isValidShot(position):
+            self.moves += 1
             val = self.grid[position[0]][position[1]]
             if val == 0:
                 print('Miss!')
@@ -237,21 +239,21 @@ class Player:
 
 
 if __name__ == "__main__":
-    # 2 players (head to head):
-    testBoard = Board(rows = 8, columns = 8, player1Type = 'AI', player2Type = 'AI', showDisplay = True)
-    gameEnd = False
-    i = 0
-    while not gameEnd:
-        gameEnd = testBoard.executeTurn()
-        # sleep(0.01)
+    # # 2 players (head to head):
+    # testBoard = Board(rows = 4, columns = 4, player1Type = 'AI', player2Type = 'AI', showDisplay = True)
+    # gameEnd = False
+    # i = 0
+    # while not gameEnd:
+    #     gameEnd = testBoard.executeTurn()
+    #     # sleep(0.01)
 
 
     ############'
 
-    # # # 1 Player (training)
-    # trainingPlayer = Player(1, 'AI')
-    # trainingBoard = PlayerBoard(rows = 8, columns = 8, player = trainingPlayer, showDisplay = False)
-    # gameEnd = False
-    # while not gameEnd:
-    #     gameEnd = trainingBoard.executeTurn()
-    #     # sleep(0.01)
+    # # 1 Player (training)
+    trainingPlayer = Player(1, 'AI')
+    trainingBoard = PlayerBoard(rows = 4, columns = 4, player = trainingPlayer, showDisplay = True)
+    gameEnd = False
+    while not gameEnd:
+        gameEnd = trainingBoard.executeTurn()
+        # sleep(0.01)
