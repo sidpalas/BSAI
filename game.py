@@ -24,12 +24,8 @@ class Board:
         self.currentPlayer = self.player1
         self.currentBoard = self.board1
 
-    # def checkGameEnd(self):
-    #     return self.currentBoard.checkGameEnd()
-
     def executeTurn(self):
         gameEnd = self.currentBoard.executeTurn()
-        print('Board 1 Score: %s, Board 2 Score: %s' % (self.board1.getScore(), self.board2.getScore()))
         self.currentPlayer = self.player1 if self.currentPlayer.number == 2 else self.player2
         self.currentBoard = self.board1 if self.currentBoard.player.number == 2 else self.board2
         return gameEnd
@@ -86,7 +82,9 @@ class PlayerBoard:
         if self.lifeCount == 0:
             enablePrint()
             currentPlayerNum = self.player.number
+            print('*'*50)
             print('Player %s Wins by clearing Board %d!' % (currentPlayerNum, 1 if currentPlayerNum == 2 else 2)) #(which player num is shooting at which board?)
+            print('*'*50)
             return True
         else:
             return False
@@ -105,10 +103,8 @@ class PlayerBoard:
             validShot = self.isValidShot(shotPosition)
         print('Firing at %s' % shotPosition)
         self.shoot(shotPosition)
-
-        print("Ship State: %s" % self.shipsSunk)
         print('\nAfter:')
-        print(self.shipsSunk)
+        print("Ship State: %s" % self.shipsSunk)
         print('Board score: %s' % self.getScore())
         self.printView()
         print('\n')
@@ -252,10 +248,10 @@ if __name__ == "__main__":
 
     ############'
 
-    # # 1 Player (training)
-    trainingPlayer = Player(1, 'AI')
-    trainingBoard = PlayerBoard(rows = 8, columns = 8, player = trainingPlayer, showDisplay = False)
-    gameEnd = False
-    while not gameEnd:
-        gameEnd = trainingBoard.executeTurn()
-        # sleep(0.01)
+    # # # 1 Player (training)
+    # trainingPlayer = Player(1, 'AI')
+    # trainingBoard = PlayerBoard(rows = 8, columns = 8, player = trainingPlayer, showDisplay = False)
+    # gameEnd = False
+    # while not gameEnd:
+    #     gameEnd = trainingBoard.executeTurn()
+    #     # sleep(0.01)
