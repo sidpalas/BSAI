@@ -10,7 +10,7 @@ class RuleAI:
     def __init__(self, rows, columns, playerType):
         config = configparser.ConfigParser()
         config.read('config.ini')
-        print(playerType)
+        self.playerType = playerType
         self.epsilon = int(config[playerType]['epsilon'])
         self.rows = rows
         self.columns = columns

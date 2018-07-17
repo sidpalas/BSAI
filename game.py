@@ -5,6 +5,8 @@ import argparse
 import numpy as np
 from random import randint
 from time import sleep
+import matplotlib.pyplot as plt
+
 
 from ruleBasedAI import RuleAI
 
@@ -23,12 +25,24 @@ class GameBatch:
         self.columns = columns
         self.ships = ships
         self.showDisplay = showDisplay
+        # self.numPlayers = numPlayers
         return
 
     def playGames(self):
+        winner = []
+        numMoves = []
         for i in range(self.numGames):
             thisGame = Game(2, ['AI', 'RANDOM'], self.rows, self.columns, self.ships, self.showDisplay)
-            thisGame.playGame()
+            gameReport = thisGame.playGame()
+            print(gameReport)
+            winner.append(gameReport['winnerPlayerNum'])
+            numMoves.append(gameReport['winnerNumMoves'])
+
+        gameNum = range(self.numGames)
+        plt.plot(gameNum,winner, '^')
+        plt.ylabel('Winner')
+        plt.xlabel('Game number')
+        plt.show()
 
 class Game:
     def __init__(self, numPlayers, playerTypes, rows, columns, ships, showDisplay):
@@ -51,7 +65,8 @@ class Game:
         gameEnd = False
         while not gameEnd:
             gameEnd = self.board.executeTurn()
-            sleep(0.01)
+            # sleep(0.01)
+        return self.board.getGameReport()
 
     #these methods assume single player board
     #modeled after https://gist.github.com/EderSantana/c7222daa328f0e885093
@@ -74,7 +89,6 @@ class Game:
         self.__init__(self.numPlayers, self.playerTypes, self.rows, self.columns, self.ships, self.showDisplay)
 
 
-
 class Board:
     def __init__(self, rows, columns, player1Type, player2Type, ships, showDisplay):
         self.player1 = Player(1, player1Type, rows, columns)
@@ -86,9 +100,14 @@ class Board:
 
     def executeTurn(self):
         gameEnd = self.currentBoard.executeTurn()
+        if gameEnd:
+            self.winningBoard = self.currentBoard
         self.currentPlayer = self.player1 if self.currentPlayer.number == 2 else self.player2
         self.currentBoard = self.board1 if self.currentBoard.player.number == 2 else self.board2
         return gameEnd
+
+    def getGameReport(self):
+        return self.winningBoard.gameReport
 
     def printBoard(self):
         print('\n')
@@ -135,12 +154,17 @@ class PlayerBoard:
         if self.lifeCount == 0:
             enablePrint()
             currentPlayerNum = self.player.number
+            self.gameReport = {'winnerPlayerNum': currentPlayerNum,
+                                'winnerNumMoves': self.moves}
             print('*'*50)
             print('Player %s Wins by clearing Board %d in %s moves!' % (currentPlayerNum, 1 if currentPlayerNum == 2 else 2, self.moves)) #(which player num is shooting at which board?)
             print('*'*50)
             return True
         else:
             return False
+
+    def getGameReport(self):
+        return self.gameReport
 
     def executeTurn(self):
         print('\nPlayer %s Turn:' % self.player.number)
@@ -184,29 +208,31 @@ class PlayerBoard:
     def isValidPlacement(self, position, length, heading):
         #check edges
         if position[0] not in range(self.rows) or position[1] not in range(self.columns):
-            # print('start position out of bounds')
+            print('start position out of bounds')
             return False
         if heading == "vertical":
             remainingRows = self.rows - position[0]
             if length > remainingRows:
-                # print('end position out of bounds')
+                print('end position out of bounds')
                 return False
         elif heading == "horizontal":
             remainingColumns = self.columns - position[1]
             if length > remainingColumns:
-                # print('end position out of bounds')
+                print('end position out of bounds')
                 return False
+        else:
+            raise ValueError
 
         #check other ships
         if heading == "vertical":
             for i in range(length):
                 if self.grid[position[0] + i, position[1]] != 0:
-                    # print('another boat is there')
+                    print('another boat is there')
                     return False
         elif heading == "horizontal":
             for j in range(length):
                 if self.grid[position[0], position[1] + j] != 0:
-                    # print('another boat is there')
+                    print('another boat is there')
                     return False
         else:
             raise ValueError
@@ -251,9 +277,9 @@ class PlayerBoard:
         for i, ship in enumerate(self.ships):
             length = ship
             type = i + 1
-            heading = "vertical" if randint(0,1) == 0 else "horizontal"
             validPlacement = False
             while not validPlacement:
+                heading = "vertical" if randint(0,1) == 0 else "horizontal"
                 position = [randint(0,self.rows-1),randint(0,self.columns-1)]
                 validPlacement = self.isValidPlacement(position, ship, heading)
             self.placeShip(position, length, heading, type)
