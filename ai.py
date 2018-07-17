@@ -4,6 +4,9 @@ from keras.models import Sequential
 from keras.layers.core import Dense
 from keras.optimizers import sgd
 
+import matplotlib.pyplot as plt
+
+
 from game import Game
 
 # Implementation based on https://edersantana.github.io/articles/keras_rl/
@@ -46,19 +49,19 @@ class ExperienceReplay(object):
 if __name__ == "__main__":
     # parameters
     epsilon = .1  # exploration
-    epoch = 1000
+    epoch = 500
     max_memory = 1
-    hidden_size = 100
+    discount = 0 #future moves don't really get benefit from current move
+    hidden_size = 50
     batch_size = 50
     grid_size = 2
     num_actions = grid_size**2  # anywhere in grid
 
-
     model = Sequential()
     model.add(Dense(hidden_size, input_shape=(grid_size**2,), activation='relu'))
     model.add(Dense(hidden_size, activation='relu'))
-    model.add(Dense(num_actions))
-    model.compile(sgd(lr=.2), "mse")
+    model.add(Dense(num_actions, activation='linear'))
+    model.compile(sgd(lr=.005), "mse")
 
     # If you want to continue training from a previous model, just uncomment the line bellow
     # model.load_weights("model.h5")
@@ -67,7 +70,7 @@ if __name__ == "__main__":
     env = Game(numPlayers = 1, playerTypes = ['AI'], rows=grid_size, columns=grid_size, ships = [2], showDisplay=False)
 
     # Initialize experience replay object
-    exp_replay = ExperienceReplay(max_memory=max_memory)
+    exp_replay = ExperienceReplay(max_memory=max_memory,discount = discount)
 
     turnNums = []
 
@@ -88,9 +91,6 @@ if __name__ == "__main__":
                 q = model.predict(input_tm1)
                 action = np.argmax(q[0])
 
-            print('Action: ',action)
-
-
             # apply action, get rewards and new state
             input_t, reward, game_over = env.act(action)
 
@@ -99,11 +99,16 @@ if __name__ == "__main__":
 
             # adapt model
             inputs, targets = exp_replay.get_batch(model, batch_size=batch_size)
+
+            loss += model.train_on_batch(inputs, targets)
+
             turnNum += 1
-        print("Epoch {:03d}/{} | Turn count: {}".format(e, epoch-1, turnNum))
+        print("Epoch {:03d}/{} |  Loss {:.4f} | Turn count: {}".format(e, epoch-1, loss, turnNum))
         turnNums.append(turnNum)
 
-    print(turnNums)
+    plt.plot(turnNums)
+    plt.ylabel('Turns to finish game')
+    plt.show()
 
     # Save trained model weights and architecture, this will be used by the visualization code
     model.save_weights("model.h5", overwrite=True)
