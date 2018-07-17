@@ -4,18 +4,9 @@ from keras.models import Sequential
 from keras.layers.core import Dense
 from keras.optimizers import sgd
 
-from game import Player
-from game import Board
-from game import PlayerBoard
 from game import Game
 
-#
-# if __name__ == "__main__":
-#     testGame = Game(numPlayers = 1, playerTypes = ['AI'], rows=4, columns=4, showDisplay=True)
-#     # testGame = Game(numPlayers = 2, playerTypes = ['AI']*2, rows=4, columns=4, showDisplay=True)
-#
-#     testGame.playGame()
-
+# Implementation based on https://edersantana.github.io/articles/keras_rl/
 
 class ExperienceReplay(object):
     def __init__(self, max_memory=100, discount=.9):
@@ -54,13 +45,14 @@ class ExperienceReplay(object):
 
 if __name__ == "__main__":
     # parameters
-    epsilon = .3  # exploration
-    num_actions = 9  # anywhere in 3x3 grid
+    epsilon = .1  # exploration
     epoch = 1000
-    max_memory = 10
+    max_memory = 100
     hidden_size = 100
     batch_size = 50
-    grid_size = 3
+    grid_size = 2
+    num_actions = grid_size**2  # anywhere in grid
+
 
     model = Sequential()
     model.add(Dense(hidden_size, input_shape=(grid_size**2,), activation='relu'))
@@ -72,13 +64,14 @@ if __name__ == "__main__":
     # model.load_weights("model.h5")
 
     # Define environment/game
-    env = Game(numPlayers = 1, playerTypes = ['AI'], rows=grid_size, columns=grid_size, showDisplay=False)
+    env = Game(numPlayers = 1, playerTypes = ['AI'], rows=grid_size, columns=grid_size, ships = [2], showDisplay=False)
 
     # Initialize experience replay object
     exp_replay = ExperienceReplay(max_memory=max_memory)
 
-    # Train
+    turnNums = []
 
+    # Train
     for e in range(epoch):
         loss = 0.
         env.reset()
@@ -108,6 +101,9 @@ if __name__ == "__main__":
             inputs, targets = exp_replay.get_batch(model, batch_size=batch_size)
             turnNum += 1
         print("Epoch {:03d}/{} | Turn count: {}".format(e, epoch-1, turnNum))
+        turnNums.append(turnNum)
+
+    print(turnNums)
 
     # Save trained model weights and architecture, this will be used by the visualization code
     model.save_weights("model.h5", overwrite=True)
