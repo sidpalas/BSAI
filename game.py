@@ -14,7 +14,7 @@ def enablePrint():
     sys.stdout = sys.__stdout__
 
 class Game:
-    def __init__(self, numPlayers, playerTypes, rows, columns, showDisplay = True):
+    def __init__(self, numPlayers, playerTypes, rows, columns, ships, showDisplay):
         self.numPlayers = numPlayers
         self.playerTypes = playerTypes
         self.rows = rows
@@ -22,10 +22,10 @@ class Game:
         self.showDisplay = showDisplay
         if numPlayers == 1:
             trainingPlayer = Player(1, playerTypes[0], rows, columns)
-            self.board = PlayerBoard(rows, columns, trainingPlayer, showDisplay)
+            self.board = PlayerBoard(rows, columns, trainingPlayer, ships, showDisplay)
         elif numPlayers == 2:
             # 2 players (head to head):
-            self.board = Board(rows, columns, playerTypes[0], playerTypes[1], showDisplay)
+            self.board = Board(rows, columns, playerTypes[0], playerTypes[1], ships, showDisplay)
         else:
             raise ValueError
 
@@ -58,11 +58,11 @@ class Game:
 
 
 class Board:
-    def __init__(self, rows, columns, player1Type = 'AI', player2Type = 'AI', showDisplay = True):
+    def __init__(self, rows, columns, player1Type, player2Type, ships, showDisplay):
         self.player1 = Player(1, player1Type, rows, columns)
         self.player2 = Player(2, player2Type, rows, columns)
-        self.board1 = PlayerBoard(rows, columns, self.player1, showDisplay)
-        self.board2 = PlayerBoard(rows, columns, self.player2, showDisplay)
+        self.board1 = PlayerBoard(rows, columns, self.player1, ships, showDisplay)
+        self.board2 = PlayerBoard(rows, columns, self.player2, ships, showDisplay)
         self.currentPlayer = self.player1
         self.currentBoard = self.board1
 
@@ -101,26 +101,23 @@ class PlayerBoard:
     MISS_VALUE = -1
     HIT_VALUE = 20
     REPEAT_VALUE = -2
-    ships = [2,3,3,4,5]
-    # ships = [2,3]
-    # ships = [2]
-    lifeCount = sum(ships)
-    numShips = len(ships)
+
 
     displayMapping = {-1:'O', 0:' ', 1:'X'}
 
-    def __init__(self, rows, columns, player, showDisplay):
+    def __init__(self, rows, columns, player, ships, showDisplay):
         if not showDisplay:
             disablePrint()
-        self.lifeCount = PlayerBoard.lifeCount
+        self.lifeCount = sum(ships)
+        self.numShips = len(ships)
+        self.ships = np.array(ships[:], dtype=int) #used to keep track of when a particular boat is sunk
+        self.shipsSunk = np.zeros([len(self.ships),], dtype=int)
         self.rows = rows
         self.columns = columns
         self.grid = np.zeros([rows,columns], dtype=int)
         self.randomBoatPlacement()
         self.opponentView = np.zeros([rows,columns],dtype=int)
         self.player = player
-        self.ships = np.array(PlayerBoard.ships[:], dtype=int) #used to keep track of when a particular boat is sunk
-        self.shipsSunk = np.zeros([len(self.ships),], dtype=int)
         self.reward = 0
         self.score = 0
         self.moves = 0
@@ -241,7 +238,7 @@ class PlayerBoard:
             print('\n'+'-'*32)
 
     def randomBoatPlacement(self):
-        for i, ship in enumerate(PlayerBoard.ships):
+        for i, ship in enumerate(self.ships):
             length = ship
             type = i + 1
             heading = "vertical" if randint(0,1) == 0 else "horizontal"
@@ -257,7 +254,7 @@ class PlayerBoard:
             val = self.grid[position[0],position[1]]
             if val == 0:
                 print('Miss!')
-                self.grid[position[0],position[1]] = -(PlayerBoard.numShips+1) #+1 to avoid conflict with boat indices
+                self.grid[position[0],position[1]] = -(self.numShips+1) #+1 to avoid conflict with boat indices
                 self.opponentView[position[0],position[1]] = -1
                 self.reward = PlayerBoard.MISS_VALUE
             else:
@@ -306,11 +303,9 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print(args)
-
     if len(args.players)==1:
-        testGame = Game(numPlayers = 1, playerTypes = args.players, rows=8, columns=8, showDisplay=True)
+        testGame = Game(numPlayers = 1, playerTypes = args.players, rows=8, columns=8, ships = [2,3,3,4,5], showDisplay=True)
     else:
-        testGame = Game(numPlayers = 2, playerTypes = args.players, rows=8, columns=8, showDisplay=True)
+        testGame = Game(numPlayers = 2, playerTypes = args.players, rows=8, columns=8, ships = [2,3,3,4,5], showDisplay=True)
 
     testGame.playGame()

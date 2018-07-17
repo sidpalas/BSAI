@@ -27,3 +27,5 @@ $ THREE PLAYER BATTLESHIP... WAT?
 The AI in standard games plays completely at random. Hopefully you can beat it.
 
 more to come...
+
+## The Plan
