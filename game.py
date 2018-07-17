@@ -17,6 +17,7 @@ class Game:
     def __init__(self, numPlayers, playerTypes, rows, columns, ships, showDisplay):
         self.numPlayers = numPlayers
         self.playerTypes = playerTypes
+        self.ships = ships
         self.rows = rows
         self.columns = columns
         self.showDisplay = showDisplay
@@ -53,7 +54,7 @@ class Game:
         return self.observe(), reward, gameOver
 
     def reset(self):
-        self.__init__(self.numPlayers, self.playerTypes, self.rows, self.columns, self.showDisplay)
+        self.__init__(self.numPlayers, self.playerTypes, self.rows, self.columns, self.ships, self.showDisplay)
 
 
 

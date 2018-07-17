@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # parameters
     epsilon = .1  # exploration
     epoch = 1000
-    max_memory = 100
+    max_memory = 1
     hidden_size = 100
     batch_size = 50
     grid_size = 2
