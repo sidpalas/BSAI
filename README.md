@@ -20,7 +20,7 @@ Two player AI vs. AI:
 ```
 $ python3 game.py --players AI AI
 ```
-Three player AI vs. Human vs. AI ("The AI sandwich)":
+Three player AI vs. Human vs. AI ("The AI sandwich"):
 ```
 $ THREE PLAYER BATTLESHIP... WAT?
 ```
