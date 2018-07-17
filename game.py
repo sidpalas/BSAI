@@ -1,10 +1,9 @@
-import copy
-import random
-from time import sleep
-import logging
 import sys
 import os
+import argparse
 import numpy as np
+from random import randint
+from time import sleep
 
 # Disable
 def disablePrint():
@@ -34,6 +33,7 @@ class Game:
         gameEnd = False
         while not gameEnd:
             gameEnd = self.board.executeTurn()
+            sleep(0.01)
 
     #these methods assume single player board
     #modeled after https://gist.github.com/EderSantana/c7222daa328f0e885093
@@ -101,11 +101,13 @@ class PlayerBoard:
     MISS_VALUE = -1
     HIT_VALUE = 20
     REPEAT_VALUE = -2
-    # ships = [2,3,3,4,5]
-    ships = [2,3]
-    #ships = [2]
+    ships = [2,3,3,4,5]
+    # ships = [2,3]
+    # ships = [2]
     lifeCount = sum(ships)
     numShips = len(ships)
+
+    displayMapping = {-1:'O', 0:' ', 1:'X'}
 
     def __init__(self, rows, columns, player, showDisplay):
         if not showDisplay:
@@ -143,14 +145,14 @@ class PlayerBoard:
         self.printView()
         print('\n')
 
+        # # Repeat shots allowed to retry
+        validShot = False
+        while not validShot:
+            shotPosition = self.player.getShot()
+            validShot = self.isValidShot(shotPosition)
 
-        # # Initially I was preventing bad shots...
-        # validShot = False
-        # while not validShot:
-        #     validShot = self.isValidShot(shotPosition)
-
-        # # A bad shot will now just be a skipped turn
-        shotPosition = self.player.getShot()
+        # # Alternatively a bad shot could just be a skipped turn
+        # shotPosition = self.player.getShot()
 
 
         print('Firing at %s' % shotPosition)
@@ -231,19 +233,21 @@ class PlayerBoard:
             print(row)
 
     def printView(self):
+        print('-'*32)
         for row in self.opponentView:
+            print('|', end='')
             for col in row:
-                print('%3d' % col, end=' ')
-            print('')
+                print(' %1s |' % PlayerBoard.displayMapping[col], end='')
+            print('\n'+'-'*32)
 
     def randomBoatPlacement(self):
         for i, ship in enumerate(PlayerBoard.ships):
             length = ship
             type = i + 1
-            heading = "vertical" if random.randint(0,1) == 0 else "horizontal"
+            heading = "vertical" if randint(0,1) == 0 else "horizontal"
             validPlacement = False
             while not validPlacement:
-                position = [random.randint(0,7),random.randint(0,7)]
+                position = [randint(0,7),randint(0,7)]
                 validPlacement = self.isValidPlacement(position, ship, heading)
             self.placeShip(position, length, heading, type)
 
@@ -283,7 +287,7 @@ class Player:
 
     def getShot(self):
         if self.type == 'AI':
-            return [random.randint(0,self.rows-1),random.randint(0,self.columns-1)]
+            return [randint(0,self.rows-1),randint(0,self.columns-1)]
         elif self.type == 'Human':
             positionString = input('Player ' + str(self.number) + ' Fire at will (row <space> col, zero indexed) \n')
 
@@ -296,7 +300,17 @@ class Player:
 
 
 if __name__ == "__main__":
-    testGame = Game(numPlayers = 1, playerTypes = ['AI'], rows=3, columns=3, showDisplay=True)
-    # testGame = Game(numPlayers = 2, playerTypes = ['AI']*2, rows=4, columns=4, showDisplay=True)
+    parser = argparse.ArgumentParser(description='Play the game.')
+    parser.add_argument('--players', metavar='N', type=str, nargs='+', default=['AI', 'AI'],
+                            help='')
+
+    args = parser.parse_args()
+
+    print(args)
+
+    if len(args.players)==1:
+        testGame = Game(numPlayers = 1, playerTypes = args.players, rows=8, columns=8, showDisplay=True)
+    else:
+        testGame = Game(numPlayers = 2, playerTypes = args.players, rows=8, columns=8, showDisplay=True)
 
     testGame.playGame()
