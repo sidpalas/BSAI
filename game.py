@@ -6,6 +6,8 @@ import numpy as np
 from random import randint
 from time import sleep
 
+from ruleBasedAI import RuleAI
+
 # Disable
 def disablePrint():
     sys.stdout = open('logFile', 'w')
@@ -146,7 +148,8 @@ class PlayerBoard:
 
 
         print('Firing at %s' % shotPosition)
-        self.shoot(shotPosition)
+        isHit = self.shoot(shotPosition)
+        self.player.postExecution(shotPosition, isHit)
         print('\nAfter:')
         print("Ship State: %s" % self.shipsSunk)
         print('Board score: %s' % self.getScore())
@@ -250,19 +253,19 @@ class PlayerBoard:
                 self.grid[position[0],position[1]] = -(self.numShips+1) #+1 to avoid conflict with boat indices
                 self.opponentView[position[0],position[1]] = -1
                 self.reward = PlayerBoard.MISS_VALUE
+                return False
             else:
                 print('Hit!')
                 self.grid[position[0],position[1]] *= -1
                 self.opponentView[position[0],position[1]] = 1
                 self.reward = PlayerBoard.HIT_VALUE
+                self.score += self.reward
                 self.lifeCount -= 1
                 self.ships[val-1] -= 1
                 if self.ships[val-1] == 0:
                     self.shipsSunk[val-1]=1 #would use True, but using in the gameState variable with ints
                     print('Ship of length ' + str(val) + ' sunk!')
-
-            self.score += self.reward
-            return True
+                return True
         else:
             self.reward = PlayerBoard.REPEAT_VALUE
             self.score += self.reward
@@ -274,19 +277,25 @@ class Player:
         self.number = number
         self.rows = rows
         self.columns = columns
+        self.ai = RuleAI(rows, columns)
 
     def getShot(self):
         if self.type == 'AI':
-            return [randint(0,self.rows-1),randint(0,self.columns-1)]
+            return self.ai.getNextMove()
         elif self.type == 'Human':
             positionString = input('Player ' + str(self.number) + ' Fire at will (row <space> col, zero indexed) \n')
-
-            #TODO: Add error handling for inputs... add regex
-
+            #TODO: Add error handling for inputs
             positionList = list(map(int, positionString.split()))
             return positionList
         else:
             raise ValueError
+
+    def postExecution(self, prevMove, isHit):
+        if self.type == 'AI':
+            self.ai.postExecution(prevMove, isHit)
+        else:
+            pass
+
 
 
 if __name__ == "__main__":
@@ -297,7 +306,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if len(args.players)==1:
-        testGame = Game(numPlayers = 1, playerTypes = args.players, rows=4, columns=4, ships = [2,3], showDisplay=True)
+        testGame = Game(numPlayers = 1, playerTypes = args.players, rows=8, columns=8, ships = [2,3,3,4,5], showDisplay=True)
     else:
         testGame = Game(numPlayers = 2, playerTypes = args.players, rows=8, columns=8, ships = [2,3,3,4,5], showDisplay=True)
 

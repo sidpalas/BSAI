@@ -11,16 +11,17 @@ class RuleAI:
         config = configparser.ConfigParser()
         config.read('config.ini')
         self.rows = rows
-        self.column = columns
+        self.columns = columns
         self.boardState = np.zeros([rows, columns], dtype=int)
         self.moveQueue = deque()
-        self.hitQueue = deque()
+        # self.hitQueue = deque()
         return
 
     def addMoveToQueue(self, position, index = -1):
         if self.isWithinBoard(position):
             if not self.hasBeenPlayed(position):
-                self.moveQueue.insert(position, index)
+                print(index)
+                self.moveQueue.insert(index, position)
                 return True
         return False
 
@@ -37,7 +38,7 @@ class RuleAI:
             return True
 
     def isQueueEmpty(self):
-        return len(queue) == 0
+        return len(self.moveQueue) == 0
 
     def getNextMove(self):
         while self.isQueueEmpty():
@@ -52,14 +53,14 @@ class RuleAI:
 
     def generateAdjacentMoves(self, position, directionIndices, queueIndex):
         for directionIndex in directionIndices:
-            relativePosition = DIRECTION_MAPPING[directionIndex]
+            relativePosition = RuleAI.DIRECTION_MAPPING[directionIndex]
             newRow = position[0] + relativePosition[0]
             newColumn = position[1] + relativePosition[1]
             move = [newRow, newColumn, directionIndex]
             self.addMoveToQueue(move, queueIndex) #queueIndex will be configurable
 
     def generateAllAdjacentMoves(self, position, queueIndex):
-        self.generateAdjacentMoves(position, direcitonIndices, queueIndex)
+        self.generateAdjacentMoves(position, [0,1,2,3], queueIndex)
 
     def generateVerticalMoves(self, position, queueIndex):
         self.generateAdjacentMoves(position, [0,2], queueIndex)
@@ -85,9 +86,13 @@ class RuleAI:
     def executeTurn(self):
         return self.getNextMove()
 
-    def postExection(self,prevMove, isHit):
+    def postExecution(self,prevMove, isHit):
         # Need to keep track of last move, direction of exploration, to determine which branch to go down...
         # moveDirection
         # isHit?
-        self.generateAllAdjacentMoves(self, currentMove, queueIndex = 0) #queueIndex = 1 is GREEDY
+        if isHit:
+            self.boardState[prevMove[0],prevMove[1]] = 1
+            self.generateAllAdjacentMoves(prevMove, 0) #queueIndex = 0 is GREEDY
+        else:
+            self.boardState[prevMove[0],prevMove[1]] = -1
         return
