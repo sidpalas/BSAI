@@ -34,17 +34,16 @@ class Game:
         gameEnd = False
         while not gameEnd:
             gameEnd = self.board.executeTurn()
-            sleep(0.01)
 
     #these methods assume single player board
     #modeled after https://gist.github.com/EderSantana/c7222daa328f0e885093
     def updateState(self, action):
-        #action is an int in range(0,row*column)
+        #action[0] is an int in range(0,row*column)
         position = [action // self.columns, action % self.columns]
         self.board.shoot(position)
 
     def observe(self):
-        self.board.printView()
+        # self.board.printView()
         return self.board.getGameState()
 
     def act(self, action):
@@ -100,8 +99,8 @@ class Board:
 
 class PlayerBoard:
     MISS_VALUE = -1
-    HIT_VALUE = 100
-    REPEAT_VALUE = -5
+    HIT_VALUE = 20
+    REPEAT_VALUE = -2
     # ships = [2,3,3,4,5]
     ships = [2,3]
     #ships = [2]
@@ -118,7 +117,7 @@ class PlayerBoard:
         self.randomBoatPlacement()
         self.opponentView = np.zeros([rows,columns],dtype=int)
         self.player = player
-        self.ships = PlayerBoard.ships[:] #used to keep track of when a particular boat is sunk
+        self.ships = np.array(PlayerBoard.ships[:], dtype=int) #used to keep track of when a particular boat is sunk
         self.shipsSunk = np.zeros([len(self.ships),], dtype=int)
         self.reward = 0
         self.score = 0
@@ -166,7 +165,7 @@ class PlayerBoard:
 
     def getGameState(self):
         # gameState = np.concatenate((self.grid.flatten(),self.shipsSunk.flatten()),axis = 0)
-        gameState = self.opponentView.flatten()
+        gameState = self.opponentView.reshape(1,self.rows*self.columns,)
         return gameState
 
     def getScore(self):
@@ -208,7 +207,6 @@ class PlayerBoard:
     def isValidShot(self, position):
         if position[0] not in range(self.rows) or position[1] not in range(self.columns):
             return False
-        print(type(self.grid))
         if self.grid[position[0],position[1]] >= 0:
             return True
         else:
@@ -256,25 +254,24 @@ class PlayerBoard:
             if val == 0:
                 print('Miss!')
                 self.grid[position[0],position[1]] = -(PlayerBoard.numShips+1) #+1 to avoid conflict with boat indices
-                self.opponentView[position] = -1
-                reward = PlayerBoard.MISS_VALUE
+                self.opponentView[position[0],position[1]] = -1
+                self.reward = PlayerBoard.MISS_VALUE
             else:
                 print('Hit!')
                 self.grid[position[0],position[1]] *= -1
                 self.opponentView[position[0],position[1]] = 1
-                reward = PlayerBoard.HIT_VALUE
+                self.reward = PlayerBoard.HIT_VALUE
                 self.lifeCount -= 1
                 self.ships[val-1] -= 1
                 if self.ships[val-1] == 0:
                     self.shipsSunk[val-1]=1 #would use True, but using in the gameState variable with ints
                     print('Ship of length ' + str(val) + ' sunk!')
 
-            self.score += reward
-            self.reward = reward
+            self.score += self.reward
             return True
         else:
-            reward = PlayerBoard.REPEAT_VALUE
-            self.score += reward
+            self.reward = PlayerBoard.REPEAT_VALUE
+            self.score += self.reward
             return False
 
 class Player:
@@ -299,7 +296,7 @@ class Player:
 
 
 if __name__ == "__main__":
-    testGame = Game(numPlayers = 1, playerTypes = ['AI'], rows=4, columns=4, showDisplay=True)
+    testGame = Game(numPlayers = 1, playerTypes = ['AI'], rows=3, columns=3, showDisplay=True)
     # testGame = Game(numPlayers = 2, playerTypes = ['AI']*2, rows=4, columns=4, showDisplay=True)
 
     testGame.playGame()
