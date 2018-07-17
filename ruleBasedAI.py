@@ -7,9 +7,11 @@ class RuleAI:
 
     DIRECTION_MAPPING = {0:[-1,0],1:[0,1],2:[1,0],3:[0,-1]}
 
-    def __init__(self, rows, columns, config = 'DEFAULT'):
+    def __init__(self, rows, columns, playerType):
         config = configparser.ConfigParser()
         config.read('config.ini')
+        print(playerType)
+        self.epsilon = int(config[playerType]['epsilon'])
         self.rows = rows
         self.columns = columns
         self.boardState = np.zeros([rows, columns], dtype=int)
@@ -49,7 +51,7 @@ class RuleAI:
         return self.moveQueue.popleft()
 
     def generateRandomMove(self):
-        self.addMoveToQueue([randint(0,self.rows-1),randint(0,self.columns-1), 0], index = -1)
+        return self.addMoveToQueue([randint(0,self.rows-1),randint(0,self.columns-1), 0], index = 0)
 
     def generateAdjacentMoves(self, position, directionIndices, queueIndex):
         for directionIndex in directionIndices:
@@ -92,7 +94,11 @@ class RuleAI:
         # isHit?
         if isHit:
             self.boardState[prevMove[0],prevMove[1]] = 1
-            self.generateAllAdjacentMoves(prevMove, 0) #queueIndex = 0 is GREEDY
+            if np.random.rand() <= self.epsilon:
+                while not self.generateRandomMove():
+                    continue #keep trying to add random moves until one succeeds
+            else:
+                self.generateAllAdjacentMoves(prevMove, 0) #queueIndex = 0 is GREEDY
         else:
             self.boardState[prevMove[0],prevMove[1]] = -1
         return

@@ -16,6 +16,20 @@ def disablePrint():
 def enablePrint():
     sys.stdout = sys.__stdout__
 
+class GameBatch:
+    def __init__(self, numGames, rows, columns, ships, showDisplay):
+        self.numGames = numGames
+        self.rows = rows
+        self.columns = columns
+        self.ships = ships
+        self.showDisplay = showDisplay
+        return
+
+    def playGames(self):
+        for i in range(self.numGames):
+            thisGame = Game(2, ['AI', 'RANDOM'], self.rows, self.columns, self.ships, self.showDisplay)
+            thisGame.playGame()
+
 class Game:
     def __init__(self, numPlayers, playerTypes, rows, columns, ships, showDisplay):
         self.numPlayers = numPlayers
@@ -272,17 +286,17 @@ class PlayerBoard:
             return False
 
 class Player:
-    def __init__(self, number, type, rows, columns):
-        self.type = type
+    def __init__(self, number, playerType, rows, columns):
+        self.playerType = playerType
         self.number = number
         self.rows = rows
         self.columns = columns
-        self.ai = RuleAI(rows, columns)
+        self.ai = RuleAI(rows, columns, playerType)
 
     def getShot(self):
-        if self.type == 'AI':
+        if self.playerType in ['AI', 'RANDOM']:
             return self.ai.getNextMove()
-        elif self.type == 'Human':
+        elif self.playerType == 'Human':
             positionString = input('Player ' + str(self.number) + ' Fire at will (row <space> col, zero indexed) \n')
             #TODO: Add error handling for inputs
             positionList = list(map(int, positionString.split()))
@@ -291,7 +305,7 @@ class Player:
             raise ValueError
 
     def postExecution(self, prevMove, isHit):
-        if self.type == 'AI':
+        if self.playerType == 'AI':
             self.ai.postExecution(prevMove, isHit)
         else:
             pass
