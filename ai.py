@@ -1,6 +1,9 @@
 import json
 import numpy as np
+import logging
 from keras.models import Sequential
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
+
 from keras.layers.core import Dense
 from keras.optimizers import sgd
 
@@ -10,6 +13,7 @@ import matplotlib.pyplot as plt
 from game import Game
 
 # Implementation based on https://edersantana.github.io/articles/keras_rl/
+# More description here https://ai.intel.com/demystifying-deep-reinforcement-learning/
 
 class ExperienceReplay(object):
     def __init__(self, max_memory=100, discount=.9):
@@ -47,27 +51,31 @@ class ExperienceReplay(object):
         return inputs, targets
 
 if __name__ == "__main__":
+
+    logging.basicConfig(level=logging.INFO)
+
     # parameters
     epsilon = .1  # exploration
     epoch = 500
     max_memory = 1
     discount = 0 #future moves don't really get benefit from current move
-    hidden_size = 50
-    batch_size = 50
-    grid_size = 2
+    hidden_size = 120
+    batch_size = 10
+    grid_size = 5
     num_actions = grid_size**2  # anywhere in grid
 
     model = Sequential()
     model.add(Dense(hidden_size, input_shape=(grid_size**2,), activation='relu'))
     model.add(Dense(hidden_size, activation='relu'))
+    model.add(Dense(hidden_size//2, activation='relu'))
     model.add(Dense(num_actions, activation='linear'))
-    model.compile(sgd(lr=.005), "mse")
+    model.compile(sgd(lr=.02), "mse")
 
     # If you want to continue training from a previous model, just uncomment the line bellow
     # model.load_weights("model.h5")
 
     # Define environment/game
-    env = Game(numPlayers = 1, playerTypes = ['AI'], rows=grid_size, columns=grid_size, ships = [2], showDisplay=False)
+    env = Game(numPlayers = 1, playerTypes = ['AI'], rows=grid_size, columns=grid_size, ships = [4,5], showDisplay=False)
 
     # Initialize experience replay object
     exp_replay = ExperienceReplay(max_memory=max_memory,discount = discount)
@@ -86,10 +94,24 @@ if __name__ == "__main__":
             input_tm1 = input_t
             # get next action
             if np.random.rand() <= epsilon:
-                action = np.random.randint(0, num_actions, size=1)
+                # action = np.random.randint(0, num_actions)
+                validPosition = False
+                while not validPosition:
+                    action = np.random.randint(0, num_actions)
+                    position = [action // env.columns, action % env.columns]
+                    validPosition = env.board.isValidShot(position)
             else:
                 q = model.predict(input_tm1)
-                action = np.argmax(q[0])
+                # action = np.argmax(q[0])
+                qSortedDescending = np.argsort(q[0])[::-1]
+                i = 0
+                validPosition = False
+                while not validPosition:
+                    action = qSortedDescending[i]
+                    position = [action // env.columns, action % env.columns]
+                    validPosition = env.board.isValidShot(position)
+                    i += 1
+
 
             # apply action, get rewards and new state
             input_t, reward, game_over = env.act(action)
@@ -103,7 +125,7 @@ if __name__ == "__main__":
             loss += model.train_on_batch(inputs, targets)
 
             turnNum += 1
-        print("Epoch {:03d}/{} |  Loss {:.4f} | Turn count: {}".format(e, epoch-1, loss, turnNum))
+        print("Epoch {:03d}/{} | Loss {:.4f} | Turn count: {}".format(e, epoch-1, loss, turnNum))
         turnNums.append(turnNum)
 
     plt.plot(turnNums)

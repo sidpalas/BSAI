@@ -1,5 +1,6 @@
 import sys
 import os
+import logging
 import argparse
 import numpy as np
 from random import randint
@@ -91,20 +92,11 @@ class Board:
         print("Ship State:", self.board2.shipsSunk)
         print('\n')
 
-
-    # def placeShip(self,player, position, length, heading, type):
-    #     if player == 1:
-    #         self.board1.placeShip(position, length, heading, type)
-    #     elif player == 2:
-    #         self.board2.placeShip(position, length, heading, type)
-
 class PlayerBoard:
     MISS_VALUE = -1
-    HIT_VALUE = 20
+    HIT_VALUE = 2
     REPEAT_VALUE = -2
-
-
-    displayMapping = {-1:'O', 0:' ', 1:'X'}
+    DISPLAY_MAPPING= {-1:'O', 0:' ', 1:'X'}
 
     def __init__(self, rows, columns, player, ships, showDisplay):
         if not showDisplay:
@@ -117,7 +109,7 @@ class PlayerBoard:
         self.columns = columns
         self.grid = np.zeros([rows,columns], dtype=int)
         self.randomBoatPlacement()
-        self.opponentView = np.zeros([rows,columns],dtype=int)
+        self.opponentView = np.zeros([rows,columns],dtype=float)
         self.player = player
         self.reward = 0
         self.score = 0
@@ -175,29 +167,29 @@ class PlayerBoard:
     def isValidPlacement(self, position, length, heading):
         #check edges
         if position[0] not in range(self.rows) or position[1] not in range(self.columns):
-            print('start position out of bounds')
+            # print('start position out of bounds')
             return False
         if heading == "vertical":
             remainingRows = self.rows - position[0]
             if length > remainingRows:
-                print('end position out of bounds')
+                # print('end position out of bounds')
                 return False
         elif heading == "horizontal":
             remainingColumns = self.columns - position[1]
             if length > remainingColumns:
-                print('end position out of bounds')
+                # print('end position out of bounds')
                 return False
 
         #check other ships
         if heading == "vertical":
             for i in range(length):
                 if self.grid[position[0] + i, position[1]] != 0:
-                    print('another boat is there')
+                    # print('another boat is there')
                     return False
         elif heading == "horizontal":
             for j in range(length):
                 if self.grid[position[0], position[1] + j] != 0:
-                    print('another boat is there')
+                    # print('another boat is there')
                     return False
         else:
             raise ValueError
@@ -210,7 +202,7 @@ class PlayerBoard:
         if self.grid[position[0],position[1]] >= 0:
             return True
         else:
-            # print('invalid shot, try again')
+            print('invalid shot, try again')
             return False
 
     def placeShip(self, position, length, heading, type):
@@ -235,7 +227,7 @@ class PlayerBoard:
         for row in self.opponentView:
             print('|', end='')
             for col in row:
-                print(' %1s |' % PlayerBoard.displayMapping[col], end='')
+                print(' %1s |' % PlayerBoard.DISPLAY_MAPPING[col], end='')
             print('\n'+'-'*32)
 
     def randomBoatPlacement(self):
@@ -245,7 +237,7 @@ class PlayerBoard:
             heading = "vertical" if randint(0,1) == 0 else "horizontal"
             validPlacement = False
             while not validPlacement:
-                position = [randint(0,7),randint(0,7)]
+                position = [randint(0,self.rows-1),randint(0,self.columns-1)]
                 validPlacement = self.isValidPlacement(position, ship, heading)
             self.placeShip(position, length, heading, type)
 
