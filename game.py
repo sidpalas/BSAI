@@ -8,7 +8,7 @@ from time import sleep
 
 # Disable
 def disablePrint():
-    sys.stdout = open(os.devnull, 'w')
+    sys.stdout = open('logFile', 'w')
 
 # Enable
 def enablePrint():
@@ -45,7 +45,7 @@ class Game:
         self.board.shoot(position)
 
     def observe(self):
-        # self.board.printView()
+        self.board.printView()
         return self.board.getGameState()
 
     def act(self, action):
@@ -297,7 +297,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if len(args.players)==1:
-        testGame = Game(numPlayers = 1, playerTypes = args.players, rows=8, columns=8, ships = [2,3,3,4,5], showDisplay=True)
+        testGame = Game(numPlayers = 1, playerTypes = args.players, rows=4, columns=4, ships = [2,3], showDisplay=True)
     else:
         testGame = Game(numPlayers = 2, playerTypes = args.players, rows=8, columns=8, ships = [2,3,3,4,5], showDisplay=True)
 
