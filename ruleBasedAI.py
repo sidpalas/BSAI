@@ -204,8 +204,11 @@ class RuleAI:
         if isHit:
             self.boardState[prevMove[0],prevMove[1]] = 1
             if np.random.rand() <= self.epsilon:
-                while not self.generateRandomMove():
-                    continue #keep trying to add random moves until one succeeds
+                i = 0
+                while not self.generateRandomMove(): #keep trying to add random moves until one succeeds
+                    i+=1
+                    if i>100: #necessary because at towards the end of the game there could be no more allowable moves
+                        break
             else:
                 self.generateAllAdjacentMoves(prevMove, 0) #queueIndex = 0 is GREEDY, queueIndex = -1 is LAZY
         else:
