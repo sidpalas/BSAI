@@ -6,43 +6,49 @@ import numpy as np
 from random import randint
 from time import sleep
 import matplotlib.pyplot as plt
+import statistics
 
 
 from ruleBasedAI import RuleAI
 
 # Disable
 def disablePrint():
-    sys.stdout = open('logFile', 'w')
+    # sys.stdout = open('logFile', 'w')
+    sys.stdout = open(os.devnull, 'w')
 
 # Enable
 def enablePrint():
     sys.stdout = sys.__stdout__
 
 class GameBatch:
-    def __init__(self, numGames, rows, columns, ships, showDisplay):
+    def __init__(self, numPlayers, playerTypes, numGames, rows, columns, ships, showDisplay):
         self.numGames = numGames
         self.rows = rows
         self.columns = columns
         self.ships = ships
         self.showDisplay = showDisplay
-        # self.numPlayers = numPlayers
+        self.numPlayers = numPlayers
+        self.playerTypes = playerTypes
         return
 
     def playGames(self):
         winner = []
         numMoves = []
         for i in range(self.numGames):
-            thisGame = Game(2, ['AI', 'RANDOM'], self.rows, self.columns, self.ships, self.showDisplay)
+            thisGame = Game(self.numPlayers, self.playerTypes, self.rows, self.columns, self.ships, self.showDisplay)
             gameReport = thisGame.playGame()
             print(gameReport)
             winner.append(gameReport['winnerPlayerNum'])
             numMoves.append(gameReport['winnerNumMoves'])
 
         gameNum = range(self.numGames)
-        plt.plot(gameNum,winner, '^')
-        plt.ylabel('Winner')
+        meanMoves = statistics.mean(numMoves)
+        plt.plot(gameNum,numMoves, '^')
+        plt.axis([0, self.numGames,0, self.rows*self.columns])
+        plt.ylabel('Number of Moves to Win (mean: %s)' % meanMoves)
         plt.xlabel('Game number')
         plt.show()
+
 
 class Game:
     def __init__(self, numPlayers, playerTypes, rows, columns, ships, showDisplay):
