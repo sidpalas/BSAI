@@ -94,7 +94,7 @@ This script has examples of running a batch for a single AI (to evaluate average
 
 ![improvement over time](./images/batch.png)
 
-(You can see it won 97/100 games)
+(You can see the AI beat Random 97/100 games)
 
 A completely random AI on average took ~61 moves to clear the board, while the various configurations of the rules based approach tended to take ~47 moves. Tuning the parameters for how moves were evaluated only didn't impact the performance much (+/- 1 move or so).
 
