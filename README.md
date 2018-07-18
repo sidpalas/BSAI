@@ -70,14 +70,12 @@ $ python3 ai.py
 While not great, the AI does perform better than a completely random strategy (Red = Random, Blue = AI):
 
 ![learning vs random](./images/learningVsRandom.png)
-
-(In this case, attempting to shoot at the same square multiple times still counts as a turn, causing some very high turn counts occasionally -- considering this was a 2x2 grid with a single ship of length 2...)
+*(In this case, attempting to shoot at the same square multiple times still counts as a turn, causing some very high turn counts occasionally -- considering this was a 2x2 grid with a single ship of length 2...)*
 
 It also clearly improves over time as it plays:
 
 ![improvement over time](./images/improvement.png)
-
-(In this case, the AI is forced to generate valid moves for a 5x5 grid which caps the number of turns at 25)
+*(In this case, the AI is forced to generate valid moves for a 5x5 grid which caps the number of turns at 25)*
 
 Unfortunately the integration with this AI back in to the Battleship isn't complete, so you can't play games against the fully trained model or easily evaluate its performance. Also, the underlying model (a few full connected hidden layers...) could certainly be improved upon. Maybe at some point.
 
@@ -93,8 +91,7 @@ $ python3 test.py
 This script has examples of running a batch for a single AI (to evaluate average number of turns to clear the board) or head to head games (to evaluate performance against another approach). Below is a plot of one AI configuration (blue) playing 100 games against a completely random AI (red).
 
 ![improvement over time](./images/batch.png)
-
-(You can see the AI beat Random 97/100 games)
+*(You can see the AI beat Random 97/100 games)*
 
 A completely random AI on average took ~61 moves to clear the board, while the various configurations of the rules based approach tended to take ~47 moves. Tuning the parameters for how moves were evaluated only didn't impact the performance much (+/- 1 move or so).
 
