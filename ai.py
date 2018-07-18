@@ -2,9 +2,9 @@ import json
 import numpy as np
 import logging
 from keras.models import Sequential
-from keras.layers.convolutional import Convolution2D, MaxPooling2D
+# from keras.layers.convolutional import Convolution2D, MaxPooling2D
 
-from keras.layers.core import Dense
+from keras.layers import Dense, Dropout, Conv2D, Conv1D
 from keras.optimizers import sgd
 
 import matplotlib.pyplot as plt
@@ -56,26 +56,33 @@ if __name__ == "__main__":
 
     # parameters
     epsilon = .1  # exploration
-    epoch = 500
+    epoch = 300
     max_memory = 1
     discount = 0 #future moves don't really get benefit from current move
-    hidden_size = 120
+    hidden_size = 150
     batch_size = 10
-    grid_size = 5
+    grid_size = 8
     num_actions = grid_size**2  # anywhere in grid
 
     model = Sequential()
+    # model.add(Conv2D(64, 3,
+    #     data_format='channels_last',
+    # 	input_shape = (grid_size, grid_size, 1,),
+    # 	activation='relu',
+    #     padding = 'same')) #cant get input dimensions to agree...
     model.add(Dense(hidden_size, input_shape=(grid_size**2,), activation='relu'))
     model.add(Dense(hidden_size, activation='relu'))
     model.add(Dense(hidden_size//2, activation='relu'))
-    model.add(Dense(num_actions, activation='linear'))
-    model.compile(sgd(lr=.02), "mse")
+    model.add(Dense(num_actions))
+    model.compile(sgd(lr=.05), "mse")
+
+    # model.add(Dropout(0.5))
 
     # If you want to continue training from a previous model, just uncomment the line bellow
     # model.load_weights("model.h5")
 
     # Define environment/game
-    env = Game(numPlayers = 1, playerTypes = ['AI'], rows=grid_size, columns=grid_size, ships = [4,5], showDisplay=False)
+    env = Game(numPlayers = 1, playerTypes = ['AI'], rows=grid_size, columns=grid_size, ships = [2,3,3,4,5], showDisplay=False)
 
     # Initialize experience replay object
     exp_replay = ExperienceReplay(max_memory=max_memory,discount = discount)
@@ -92,6 +99,7 @@ if __name__ == "__main__":
         turnNum = 0
         while not game_over:
             input_tm1 = input_t
+
             # get next action
             if np.random.rand() <= epsilon:
                 # action = np.random.randint(0, num_actions)
@@ -123,7 +131,6 @@ if __name__ == "__main__":
             inputs, targets = exp_replay.get_batch(model, batch_size=batch_size)
 
             loss += model.train_on_batch(inputs, targets)
-
             turnNum += 1
         print("Epoch {:03d}/{} | Loss {:.4f} | Turn count: {}".format(e, epoch-1, loss, turnNum))
         turnNums.append(turnNum)

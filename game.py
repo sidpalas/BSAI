@@ -146,7 +146,7 @@ class Board:
 
 class PlayerBoard:
     MISS_VALUE = -1
-    HIT_VALUE = 2
+    HIT_VALUE = 10
     REPEAT_VALUE = -2
     DISPLAY_MAPPING= {-1:'O', 0:' ', 1:'X'}
 
@@ -216,6 +216,8 @@ class PlayerBoard:
     def getGameState(self):
         # gameState = np.concatenate((self.grid.flatten(),self.shipsSunk.flatten()),axis = 0)
         gameState = self.opponentView.reshape(1,self.rows*self.columns,)
+        # gameState = self.opponentView.reshape(self.rows,self.columns,1)
+        # gameState = self.opponentView
         return gameState
 
     def getScore(self):
@@ -262,7 +264,7 @@ class PlayerBoard:
         if self.grid[position[0],position[1]] >= 0:
             return True
         else:
-            print('invalid shot, try again')
+            # print('invalid shot, try again')
             return False
 
     def placeShip(self, position, length, heading, type):
