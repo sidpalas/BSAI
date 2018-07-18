@@ -334,7 +334,8 @@ class Player:
         self.number = number
         self.rows = rows
         self.columns = columns
-        self.ai = RuleAI(rows, columns, playerType)
+        if playerType != 'Human':
+            self.ai = RuleAI(rows, columns, playerType)
 
     def getShot(self):
         if self.playerType in ['AI', 'RANDOM']:
