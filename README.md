@@ -1,6 +1,6 @@
 # Battleship AI (BSAI)
 
-Rapidly developed a text based battleship game engine and reinforcement learning based AI to play it.
+Rapidly developed text based battleship game engine and a couple of AIs to play it.
 
 ## Getting Started
 
@@ -24,15 +24,14 @@ Three player AI vs. Human vs. AI ("The AI sandwich"):
 ```
 $ THREE PLAYER BATTLESHIP... WAT?
 ```
-The AI in standard games plays completely at random. Hopefully you can beat it.
 
 ## Reinforcement Learning AI
 
 The goal was to build an AI using reinforcement learning with Keras + Tensorflow.
 
-This post https://edersantana.github.io/articles/keras_rl/ was used a a starting point for this, with the https://ai.intel.com/demystifying-deep-reinforcement-learning/ helping to gain a better understanding of underlying models.
+This post https://edersantana.github.io/articles/keras_rl/ was used a a starting point for this, with https://ai.intel.com/demystifying-deep-reinforcement-learning/ helping to gain a better understanding of underlying models.
 
-There are some important differences between Battleship and the game of Catch the article uses, the primary one being that rewards happen immediately after each move (alleviating the credit assignment problem) and the a snapshot of the board state provides all of the necessary information (eliminating the need for storing memory of previous states and exploring long time horizon strategies).
+There are some important differences between Battleship and the game of Catch the article uses, the primary ones being that rewards happen immediately after each move (alleviating the credit assignment problem) and a snapshot of the board state provides all of the relevant information to choose the next move (eliminating the need for storing memory of previous states).
 
 Dependencies include numpy, matplotlib, keras, and tensorflow. The full list of packages I have installed in the venv (Don't use virtualenv or matplotlib wont work...) can be seen below:
 
@@ -63,7 +62,7 @@ tensorflow==1.9.0
 termcolor==1.1.0
 Werkzeug==0.14.1
 ```
-To run train the ai, run:
+To train the ai, run:
 ```
 $ python3 ai.py
 ```
@@ -71,15 +70,15 @@ While not great, the AI does perform better than a completely random strategy (R
 
 ![learning vs random](./images/learningVsRandom.png)
 
-*(In this case, attempting to shoot at the same square multiple times still counts as a turn, causing some very high turn counts occasionally -- considering this was a 2x2 grid with a single ship of length 2...)*
+*(In this case, attempting to shoot at the same square multiple times still counted as a turn, occasionally causing some very high turn counts -- especially considering this was a 2x2 grid with a single ship of length 2...)*
 
 It also clearly improves over time as it plays:
 
 ![improvement over time](./images/improvement.png)
 
-*(In this case, the AI is forced to generate valid moves for a 5x5 grid which caps the number of turns at 25)*
+*(In this case, the AI is limited to picking valid moves for a 5x5 grid which caps the number of turns at 25)*
 
-Unfortunately the integration with this AI back in to the Battleship isn't complete, so you can't play games against the fully trained model or easily evaluate its performance. Also, the underlying model (a few full connected hidden layers...) could certainly be improved upon. Maybe at some point.
+Unfortunately, the integration with this AI back in to the Battleship game isn't complete, so you can't play games against the fully trained model or readily evaluate its performance. Also, the underlying model (a few full connected hidden layers...) could certainly be improved upon. Maybe at some point.
 
 ## Configurable rules based AI
 
@@ -94,10 +93,10 @@ This script has examples of running a batch for a single AI (to evaluate average
 
 ![improvement over time](./images/batch.png)
 
-*(You can see the AI beat Random 97/100 games)*
+*(You can see the AI beat the Random player 97/100 games)*
 
-A completely random AI on average took ~61 moves to clear the board, while the various configurations of the rules based approach tended to take ~47 moves. Tuning the parameters for how moves were evaluated only didn't impact the performance much (+/- 1 move or so).
+A completely random AI on average took ~61 moves to clear the board, while the various configurations of the rules-based approach tended to take ~47 moves. Tuning the parameters for how moves were evaluated didn't impact the performance much (+/- 1 move or so).
 
-Also, adding a bit of randomness (i.e. 10% take a random shot to help explore uncharted territory decreased performance).
+Also, adding a bit of randomness (i.e. 10% of the time, take a random shot to help explore uncharted territory) decreased performance.
 
 I think that is all there is to say for now... cheers!
