@@ -13,8 +13,8 @@ from ruleBasedAI import RuleAI
 
 # Disable
 def disablePrint():
-    # sys.stdout = open('logFile', 'w')
-    sys.stdout = open(os.devnull, 'w')
+    sys.stdout = open('logFile', 'w')
+    # sys.stdout = open(os.devnull, 'w')
 
 # Enable
 def enablePrint():
@@ -37,17 +37,28 @@ class GameBatch:
         for i in range(self.numGames):
             thisGame = Game(self.numPlayers, self.playerTypes, self.rows, self.columns, self.ships, self.showDisplay)
             gameReport = thisGame.playGame()
-            print(gameReport)
+            # print(gameReport)
+            if i % 10 == 0:
+                print('Game %s of %s' % (i, self.numGames))
             winner.append(gameReport['winnerPlayerNum'])
             numMoves.append(gameReport['winnerNumMoves'])
 
         gameNum = range(self.numGames)
         meanMoves = statistics.mean(numMoves)
+
+        player2Indices = [i for i, x in enumerate(winner) if x == 2]
+
         plt.plot(gameNum,numMoves, '^')
+        for idx in player2Indices:
+            plt.plot(idx,numMoves[idx], 'r^')
+
         plt.axis([0, self.numGames,0, self.rows*self.columns])
         plt.ylabel('Number of Moves to Win (mean: %s)' % meanMoves)
-        plt.xlabel('Game number')
+        plt.xlabel('Game Number')
         plt.show()
+
+
+
 
 
 class Game:
@@ -162,9 +173,9 @@ class PlayerBoard:
             currentPlayerNum = self.player.number
             self.gameReport = {'winnerPlayerNum': currentPlayerNum,
                                 'winnerNumMoves': self.moves}
-            print('*'*50)
-            print('Player %s Wins by clearing Board %d in %s moves!' % (currentPlayerNum, 1 if currentPlayerNum == 2 else 2, self.moves)) #(which player num is shooting at which board?)
-            print('*'*50)
+            # print('*'*50)
+            # print('Player %s Wins by clearing Board %d in %s moves!' % (currentPlayerNum, 1 if currentPlayerNum == 2 else 2, self.moves)) #(which player num is shooting at which board?)
+            # print('*'*50)
             return True
         else:
             return False
