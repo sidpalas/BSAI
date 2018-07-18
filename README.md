@@ -71,7 +71,7 @@ While not great, the AI does perform better than a completely random strategy (R
 
 ![learning vs random](./images/learningVsRandom.png)
 
-(In this case, attempting to shoot at the same square multiple times still counts as a turn, causing some very high turn counts occasionally)
+(In this case, attempting to shoot at the same square multiple times still counts as a turn, causing some very high turn counts occasionally -- considering this was a 2x2 grid with a single ship of length 2...)
 
 It also clearly improves over time as it plays:
 
